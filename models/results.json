@@ -1,0 +1,743 @@
+{
+  "meta": {
+    "source": "MIT-BIH",
+    "fs": 360,
+    "features": [
+      "RR sebelum (s)",
+      "RR sesudah (s)",
+      "RR lokal 10 detak (s)",
+      "Rasio RR sebelum / lokal",
+      "Rasio RR sesudah / sebelum",
+      "Rasio RR sebelum / rata rekaman",
+      "Amplitudo R (mV)",
+      "Lebar QRS (ms)",
+      "Energi segmen",
+      "Puncak ke puncak (mV)",
+      "Nilai minimum (mV)",
+      "Nilai maksimum (mV)",
+      "Sampel QRS -50 ms",
+      "Sampel QRS -29 ms",
+      "Sampel QRS -7 ms",
+      "Sampel QRS +14 ms",
+      "Sampel QRS +36 ms",
+      "Sampel QRS +57 ms",
+      "Sampel QRS +79 ms",
+      "Sampel QRS +100 ms",
+      "Energi cA4",
+      "Energi cD4",
+      "Energi cD3",
+      "Energi cD2",
+      "Energi cD1",
+      "Simpangan baku cA4",
+      "Simpangan baku cD4",
+      "Simpangan baku cD3",
+      "Simpangan baku cD2",
+      "Simpangan baku cD1",
+      "Rasio RR sesudah / rata rekaman",
+      "Rasio RR lokal / rata rekaman",
+      "Korelasi dg. detak median pasien",
+      "Korelasi QRS dg. median pasien",
+      "Korelasi daerah P dg. median pasien",
+      "Selisih daerah P thd. median (RMS)",
+      "Rasio amplitudo R / median pasien",
+      "Selisih lebar QRS thd. median (ms)"
+    ],
+    "classes": [
+      "N",
+      "S",
+      "V"
+    ],
+    "created": "2026-11-18T14:08:18",
+    "sklearn": "1.8.0",
+    "python": "3.14.6"
+  },
+  "counts": {
+    "DS1": {
+      "N": 45866,
+      "S": 944,
+      "V": 3788
+    },
+    "DS2": {
+      "N": 44259,
+      "S": 1837,
+      "V": 3221
+    }
+  },
+  "tuning": null,
+  "models": {
+    "rf": {
+      "cm": [
+        [
+          40564,
+          3629,
+          66
+        ],
+        [
+          200,
+          1631,
+          6
+        ],
+        [
+          39,
+          161,
+          3021
+        ]
+      ],
+      "per_class": [
+        {
+          "kelas": "N",
+          "jumlah": 44259,
+          "TP": 40564,
+          "FN": 3695,
+          "FP": 239,
+          "TN": 4819,
+          "sensitivitas": 0.9165141553130437,
+          "presisi": 0.9941425875548366,
+          "spesifisitas": 0.9527481217872676,
+          "f1": 0.9537513813453715
+        },
+        {
+          "kelas": "S",
+          "jumlah": 1837,
+          "TP": 1631,
+          "FN": 206,
+          "FP": 3790,
+          "TN": 43690,
+          "sensitivitas": 0.8878606423516603,
+          "presisi": 0.30086699870872535,
+          "spesifisitas": 0.9201769165964616,
+          "f1": 0.44943510608983184
+        },
+        {
+          "kelas": "V",
+          "jumlah": 3221,
+          "TP": 3021,
+          "FN": 200,
+          "FP": 72,
+          "TN": 46024,
+          "sensitivitas": 0.9379074821484011,
+          "presisi": 0.976721629485936,
+          "spesifisitas": 0.9984380423464075,
+          "f1": 0.956921127652835
+        }
+      ],
+      "macro_f1": 0.7867025383626794,
+      "accuracy": 0.916844090273131,
+      "n": 49317,
+      "train_seconds": 13.4,
+      "n_train": 50598,
+      "macro_f1_tanpa_bobot": 0.7042241086475164,
+      "f1_S_tanpa_bobot": 0.16874999999999998,
+      "bobot": {
+        "weights": [
+          1.0,
+          12.0,
+          1.5
+        ],
+        "cv_f1_macro": 0.6715978966339183,
+        "cv_f1_macro_tanpa_bobot": 0.6164151071890261
+      }
+    },
+    "svm": {
+      "cm": [
+        [
+          42179,
+          1868,
+          212
+        ],
+        [
+          1129,
+          677,
+          31
+        ],
+        [
+          103,
+          40,
+          3078
+        ]
+      ],
+      "per_class": [
+        {
+          "kelas": "N",
+          "jumlah": 44259,
+          "TP": 42179,
+          "FN": 2080,
+          "FP": 1232,
+          "TN": 3826,
+          "sensitivitas": 0.9530039088095077,
+          "presisi": 0.9716200962889591,
+          "spesifisitas": 0.756425464610518,
+          "f1": 0.9622219687464356
+        },
+        {
+          "kelas": "S",
+          "jumlah": 1837,
+          "TP": 677,
+          "FN": 1160,
+          "FP": 1908,
+          "TN": 45572,
+          "sensitivitas": 0.3685356559608057,
+          "presisi": 0.2618955512572534,
+          "spesifisitas": 0.9598146588037069,
+          "f1": 0.30619629127091813
+        },
+        {
+          "kelas": "V",
+          "jumlah": 3221,
+          "TP": 3078,
+          "FN": 143,
+          "FP": 243,
+          "TN": 45853,
+          "sensitivitas": 0.9556038497361068,
+          "presisi": 0.926829268292683,
+          "spesifisitas": 0.9947283929191253,
+          "f1": 0.9409966371140325
+        }
+      ],
+      "macro_f1": 0.7364716323771288,
+      "accuracy": 0.9314029644950017,
+      "n": 49317,
+      "train_seconds": 18.6,
+      "n_train": 12732,
+      "macro_f1_tanpa_bobot": 0.7339634496866928,
+      "f1_S_tanpa_bobot": 0.31607523754120614,
+      "bobot": {
+        "weights": [
+          1.0,
+          1.5,
+          0.75
+        ],
+        "cv_f1_macro": 0.5164900567297637,
+        "cv_f1_macro_tanpa_bobot": 0.5108042294434277
+      }
+    },
+    "knn": {
+      "cm": [
+        [
+          43242,
+          925,
+          92
+        ],
+        [
+          1042,
+          782,
+          13
+        ],
+        [
+          284,
+          124,
+          2813
+        ]
+      ],
+      "per_class": [
+        {
+          "kelas": "N",
+          "jumlah": 44259,
+          "TP": 43242,
+          "FN": 1017,
+          "FP": 1326,
+          "TN": 3732,
+          "sensitivitas": 0.9770216227208025,
+          "presisi": 0.9702477113624125,
+          "spesifisitas": 0.7378410438908659,
+          "f1": 0.973622884933635
+        },
+        {
+          "kelas": "S",
+          "jumlah": 1837,
+          "TP": 782,
+          "FN": 1055,
+          "FP": 1049,
+          "TN": 46431,
+          "sensitivitas": 0.4256940664126293,
+          "presisi": 0.4270890223921354,
+          "spesifisitas": 0.9779064869418702,
+          "f1": 0.42639040348964014
+        },
+        {
+          "kelas": "V",
+          "jumlah": 3221,
+          "TP": 2813,
+          "FN": 408,
+          "FP": 105,
+          "TN": 45991,
+          "sensitivitas": 0.8733312635827383,
+          "presisi": 0.9640164496230295,
+          "spesifisitas": 0.997722145088511,
+          "f1": 0.9164359016126405
+        }
+      ],
+      "macro_f1": 0.772149730011972,
+      "accuracy": 0.9497130806821177,
+      "n": 49317,
+      "train_seconds": 3.9,
+      "n_train": 50598,
+      "macro_f1_tanpa_bobot": 0.7618374206872959,
+      "f1_S_tanpa_bobot": 0.38993288590604025,
+      "bobot": {
+        "weights": [
+          1.0,
+          3.0,
+          0.75
+        ],
+        "cv_f1_macro": 0.5630346935635032,
+        "cv_f1_macro_tanpa_bobot": 0.5620766319374546
+      }
+    }
+  },
+  "feature_groups": {
+    "Hanya rr": 0.5669390387523358,
+    "Hanya morfologi": 0.5990361667282542,
+    "Hanya wavelet": 0.5536924909487073,
+    "Hanya relatif pasien": 0.6350888762244745,
+    "Gabungan (38 fitur)": 0.7042241086475164
+  },
+  "split": {
+    "acak_macro_f1": 0.9693840562831019,
+    "acak_f1_S": 0.9253843269591301,
+    "pasien_macro_f1": 0.7042241086475164,
+    "pasien_f1_S": 0.16874999999999998
+  },
+  "ablation_rf": {
+    "30 fitur awal, tanpa bobot": 0.6806759619938328,
+    "38 fitur, tanpa bobot": 0.7042241086475164,
+    "38 fitur + bobot keputusan": 0.7867025383626794
+  },
+  "importance": [
+    {
+      "fitur": "RR sebelum (s)",
+      "kelompok": "RR",
+      "nilai": 0.06993250664332182
+    },
+    {
+      "fitur": "RR sesudah (s)",
+      "kelompok": "RR",
+      "nilai": 0.012777637459863697
+    },
+    {
+      "fitur": "RR lokal 10 detak (s)",
+      "kelompok": "RR",
+      "nilai": 0.013953667791514935
+    },
+    {
+      "fitur": "Rasio RR sebelum / lokal",
+      "kelompok": "RR",
+      "nilai": 0.04943768375326556
+    },
+    {
+      "fitur": "Rasio RR sesudah / sebelum",
+      "kelompok": "RR",
+      "nilai": 0.03380552268575688
+    },
+    {
+      "fitur": "Rasio RR sebelum / rata rekaman",
+      "kelompok": "RR",
+      "nilai": 0.11218717558167253
+    },
+    {
+      "fitur": "Amplitudo R (mV)",
+      "kelompok": "Morfologi",
+      "nilai": 0.004783216439982023
+    },
+    {
+      "fitur": "Lebar QRS (ms)",
+      "kelompok": "Morfologi",
+      "nilai": 0.012446672649741903
+    },
+    {
+      "fitur": "Energi segmen",
+      "kelompok": "Morfologi",
+      "nilai": 0.02633848152397451
+    },
+    {
+      "fitur": "Puncak ke puncak (mV)",
+      "kelompok": "Morfologi",
+      "nilai": 0.009228495057589856
+    },
+    {
+      "fitur": "Nilai minimum (mV)",
+      "kelompok": "Morfologi",
+      "nilai": 0.012866711841065118
+    },
+    {
+      "fitur": "Nilai maksimum (mV)",
+      "kelompok": "Morfologi",
+      "nilai": 0.00869015276530419
+    },
+    {
+      "fitur": "Sampel QRS -50 ms",
+      "kelompok": "Morfologi",
+      "nilai": 0.015136994674626569
+    },
+    {
+      "fitur": "Sampel QRS -29 ms",
+      "kelompok": "Morfologi",
+      "nilai": 0.012809495071088646
+    },
+    {
+      "fitur": "Sampel QRS -7 ms",
+      "kelompok": "Morfologi",
+      "nilai": 0.007397852335383712
+    },
+    {
+      "fitur": "Sampel QRS +14 ms",
+      "kelompok": "Morfologi",
+      "nilai": 0.008618872485808787
+    },
+    {
+      "fitur": "Sampel QRS +36 ms",
+      "kelompok": "Morfologi",
+      "nilai": 0.009600817155555797
+    },
+    {
+      "fitur": "Sampel QRS +57 ms",
+      "kelompok": "Morfologi",
+      "nilai": 0.011431214123780889
+    },
+    {
+      "fitur": "Sampel QRS +79 ms",
+      "kelompok": "Morfologi",
+      "nilai": 0.007272104463671064
+    },
+    {
+      "fitur": "Sampel QRS +100 ms",
+      "kelompok": "Morfologi",
+      "nilai": 0.01575121038073583
+    },
+    {
+      "fitur": "Energi cA4",
+      "kelompok": "Wavelet",
+      "nilai": 0.036923157866290364
+    },
+    {
+      "fitur": "Energi cD4",
+      "kelompok": "Wavelet",
+      "nilai": 0.0031675847906010063
+    },
+    {
+      "fitur": "Energi cD3",
+      "kelompok": "Wavelet",
+      "nilai": 0.01433692251184954
+    },
+    {
+      "fitur": "Energi cD2",
+      "kelompok": "Wavelet",
+      "nilai": 0.005209578662267255
+    },
+    {
+      "fitur": "Energi cD1",
+      "kelompok": "Wavelet",
+      "nilai": 0.0021993945161285075
+    },
+    {
+      "fitur": "Simpangan baku cA4",
+      "kelompok": "Wavelet",
+      "nilai": 0.04204730953133631
+    },
+    {
+      "fitur": "Simpangan baku cD4",
+      "kelompok": "Wavelet",
+      "nilai": 0.0032787733949593183
+    },
+    {
+      "fitur": "Simpangan baku cD3",
+      "kelompok": "Wavelet",
+      "nilai": 0.011752571300009645
+    },
+    {
+      "fitur": "Simpangan baku cD2",
+      "kelompok": "Wavelet",
+      "nilai": 0.005348798406582066
+    },
+    {
+      "fitur": "Simpangan baku cD1",
+      "kelompok": "Wavelet",
+      "nilai": 0.0025413326078604754
+    },
+    {
+      "fitur": "Rasio RR sesudah / rata rekaman",
+      "kelompok": "Relatif pasien",
+      "nilai": 0.020957223796910816
+    },
+    {
+      "fitur": "Rasio RR lokal / rata rekaman",
+      "kelompok": "Relatif pasien",
+      "nilai": 0.012048733312365853
+    },
+    {
+      "fitur": "Korelasi dg. detak median pasien",
+      "kelompok": "Relatif pasien",
+      "nilai": 0.09017582779833444
+    },
+    {
+      "fitur": "Korelasi QRS dg. median pasien",
+      "kelompok": "Relatif pasien",
+      "nilai": 0.13323540637389633
+    },
+    {
+      "fitur": "Korelasi daerah P dg. median pasien",
+      "kelompok": "Relatif pasien",
+      "nilai": 0.043676420498878474
+    },
+    {
+      "fitur": "Selisih daerah P thd. median (RMS)",
+      "kelompok": "Relatif pasien",
+      "nilai": 0.05692433022776638
+    },
+    {
+      "fitur": "Rasio amplitudo R / median pasien",
+      "kelompok": "Relatif pasien",
+      "nilai": 0.022603894235712685
+    },
+    {
+      "fitur": "Selisih lebar QRS thd. median (ms)",
+      "kelompok": "Relatif pasien",
+      "nilai": 0.039106255284546344
+    }
+  ],
+  "end_to_end": {
+    "sensitivitas": 0.9960774058577406,
+    "presisi": 0.9987696155552866,
+    "TP": 49517,
+    "FP": 61,
+    "FN": 195,
+    "evaluasi": {
+      "cm": [
+        [
+          40393,
+          3674,
+          59
+        ],
+        [
+          203,
+          1618,
+          5
+        ],
+        [
+          19,
+          133,
+          3025
+        ]
+      ],
+      "per_class": [
+        {
+          "kelas": "N",
+          "jumlah": 44126,
+          "TP": 40393,
+          "FN": 3733,
+          "FP": 222,
+          "TN": 4781,
+          "sensitivitas": 0.9154013506776051,
+          "presisi": 0.994534039148098,
+          "spesifisitas": 0.9556266240255846,
+          "f1": 0.9533283770547905
+        },
+        {
+          "kelas": "S",
+          "jumlah": 1826,
+          "TP": 1618,
+          "FN": 208,
+          "FP": 3807,
+          "TN": 43496,
+          "sensitivitas": 0.8860898138006572,
+          "presisi": 0.29824884792626727,
+          "spesifisitas": 0.9195188465847832,
+          "f1": 0.4462832712729279
+        },
+        {
+          "kelas": "V",
+          "jumlah": 3177,
+          "TP": 3025,
+          "FN": 152,
+          "FP": 64,
+          "TN": 45888,
+          "sensitivitas": 0.9521561221277935,
+          "presisi": 0.979281320815798,
+          "spesifisitas": 0.9986072423398329,
+          "f1": 0.9655282476859242
+        }
+      ],
+      "macro_f1": 0.7883799653378808,
+      "accuracy": 0.9166887174581204,
+      "n": 49129
+    },
+    "per_rekaman": [
+      {
+        "rekaman": "MIT-BIH 100",
+        "TP": 2273,
+        "FP": 0,
+        "FN": 0,
+        "sensitivitas": 1.0,
+        "presisi": 1.0
+      },
+      {
+        "rekaman": "MIT-BIH 103",
+        "TP": 2079,
+        "FP": 0,
+        "FN": 5,
+        "sensitivitas": 0.9976007677543186,
+        "presisi": 1.0
+      },
+      {
+        "rekaman": "MIT-BIH 105",
+        "TP": 2562,
+        "FP": 43,
+        "FN": 10,
+        "sensitivitas": 0.9961119751166407,
+        "presisi": 0.9834932821497121
+      },
+      {
+        "rekaman": "MIT-BIH 111",
+        "TP": 2123,
+        "FP": 1,
+        "FN": 1,
+        "sensitivitas": 0.9995291902071564,
+        "presisi": 0.9995291902071564
+      },
+      {
+        "rekaman": "MIT-BIH 113",
+        "TP": 1795,
+        "FP": 0,
+        "FN": 0,
+        "sensitivitas": 1.0,
+        "presisi": 1.0
+      },
+      {
+        "rekaman": "MIT-BIH 117",
+        "TP": 1535,
+        "FP": 0,
+        "FN": 0,
+        "sensitivitas": 1.0,
+        "presisi": 1.0
+      },
+      {
+        "rekaman": "MIT-BIH 121",
+        "TP": 1861,
+        "FP": 0,
+        "FN": 2,
+        "sensitivitas": 0.9989264626945786,
+        "presisi": 1.0
+      },
+      {
+        "rekaman": "MIT-BIH 123",
+        "TP": 1515,
+        "FP": 0,
+        "FN": 3,
+        "sensitivitas": 0.9980237154150198,
+        "presisi": 1.0
+      },
+      {
+        "rekaman": "MIT-BIH 200",
+        "TP": 2597,
+        "FP": 1,
+        "FN": 4,
+        "sensitivitas": 0.9984621299500193,
+        "presisi": 0.9996150885296382
+      },
+      {
+        "rekaman": "MIT-BIH 202",
+        "TP": 2129,
+        "FP": 0,
+        "FN": 7,
+        "sensitivitas": 0.9967228464419475,
+        "presisi": 1.0
+      },
+      {
+        "rekaman": "MIT-BIH 210",
+        "TP": 2619,
+        "FP": 4,
+        "FN": 31,
+        "sensitivitas": 0.9883018867924528,
+        "presisi": 0.9984750285932139
+      },
+      {
+        "rekaman": "MIT-BIH 212",
+        "TP": 2748,
+        "FP": 0,
+        "FN": 0,
+        "sensitivitas": 1.0,
+        "presisi": 1.0
+      },
+      {
+        "rekaman": "MIT-BIH 213",
+        "TP": 3249,
+        "FP": 0,
+        "FN": 2,
+        "sensitivitas": 0.9993848046754845,
+        "presisi": 1.0
+      },
+      {
+        "rekaman": "MIT-BIH 214",
+        "TP": 2257,
+        "FP": 1,
+        "FN": 5,
+        "sensitivitas": 0.997789566755084,
+        "presisi": 0.9995571302037201
+      },
+      {
+        "rekaman": "MIT-BIH 219",
+        "TP": 2149,
+        "FP": 0,
+        "FN": 5,
+        "sensitivitas": 0.9976787372330548,
+        "presisi": 1.0
+      },
+      {
+        "rekaman": "MIT-BIH 221",
+        "TP": 2423,
+        "FP": 0,
+        "FN": 4,
+        "sensitivitas": 0.9983518747424804,
+        "presisi": 1.0
+      },
+      {
+        "rekaman": "MIT-BIH 222",
+        "TP": 2462,
+        "FP": 4,
+        "FN": 21,
+        "sensitivitas": 0.9915424889246879,
+        "presisi": 0.9983779399837794
+      },
+      {
+        "rekaman": "MIT-BIH 228",
+        "TP": 1963,
+        "FP": 6,
+        "FN": 90,
+        "sensitivitas": 0.9561617145640526,
+        "presisi": 0.9969527679024885
+      },
+      {
+        "rekaman": "MIT-BIH 231",
+        "TP": 1571,
+        "FP": 0,
+        "FN": 0,
+        "sensitivitas": 1.0,
+        "presisi": 1.0
+      },
+      {
+        "rekaman": "MIT-BIH 232",
+        "TP": 1780,
+        "FP": 1,
+        "FN": 0,
+        "sensitivitas": 1.0,
+        "presisi": 0.9994385176866929
+      },
+      {
+        "rekaman": "MIT-BIH 233",
+        "TP": 3075,
+        "FP": 0,
+        "FN": 4,
+        "sensitivitas": 0.9987008769080871,
+        "presisi": 1.0
+      },
+      {
+        "rekaman": "MIT-BIH 234",
+        "TP": 2752,
+        "FP": 0,
+        "FN": 1,
+        "sensitivitas": 0.9996367598982928,
+        "presisi": 1.0
+      }
+    ]
+  }
+}
