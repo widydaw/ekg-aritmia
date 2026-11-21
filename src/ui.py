@@ -185,7 +185,7 @@ def cached_model(name: str):
 
 @st.cache_data(show_spinner="Mengklasifikasi detak…", max_entries=8)
 def cached_classification(uid: str, _rec: Record, model_name: str) -> dict | None:
-    """Fitur dari puncak hasil Pan-Tompkins → kelas tiap detak (alur yang sama dengan evaluasi menyeluruh di train.py)."""
+    """Fitur dari puncak hasil Pan-Tompkins → kelas tiap detak."""
     from .classifier import predict, predict_proba
     from .features import extract_features
 
@@ -194,12 +194,7 @@ def cached_classification(uid: str, _rec: Record, model_name: str) -> dict | Non
         return None
     det = cached_detection(uid, _rec)
     F = extract_features(det["clean"], det["peaks"], _rec.fs)
-    out = {"pred": predict(model, F), "proba": predict_proba(model, F), "classes": list(model.classes_), "meta": meta,
-           "truth": None}
-    if det["match"] is not None:
-        pairs = det["match"][0]
-        out["truth"] = [(i, _rec.labels[j]) for i, j in pairs]
-    return out
+    return {"pred": predict(model, F), "proba": predict_proba(model, F), "classes": list(model.classes_), "meta": meta}
 
 
 # ---------- grafik ----------

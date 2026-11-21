@@ -6,7 +6,6 @@ import streamlit as st
 from src import ui
 from src.classifier import MODEL_NAMES
 from src.data_loader import CLASS_NAMES, CLASSES
-from src.evaluation import evaluate
 from src.features import segments
 from src.monitor import CLASS_COLORS, ecg_monitor
 
@@ -96,36 +95,6 @@ with c2:
                        yaxis=dict(title="RR sesudah (s)", gridcolor="#ecdfe1"))
     st.plotly_chart(fig3, width="stretch")
     st.caption("Detak prematur (S, V) berada di kiri atas: RR sebelum pendek, diikuti jeda kompensasi yang panjang.")
-
-if res["truth"]:
-    st.subheader("Dibandingkan dengan anotasi dokter")
-    pairs = [(i, lab) for i, lab in res["truth"] if lab in CLASSES]
-    yt = np.array([lab for _, lab in pairs])
-    yp = np.array([pred[i] for i, _ in pairs])
-    ev = evaluate(yt, yp)
-    a, b = st.columns([1, 1.3], gap="large")
-    with a:
-        cm = ev["cm"]
-        fig4 = go.Figure(go.Heatmap(z=cm, x=[f"Prediksi {k}" for k in CLASSES], y=[f"Anotasi {k}" for k in CLASSES],
-                                    colorscale=[[0, "#fffdfc"], [1, ui.ACCENT]], showscale=False,
-                                    text=cm, texttemplate="%{text}", hovertemplate="%{y} · %{x}: %{z}<extra></extra>"))
-        fig4.update_layout(height=300, margin=dict(l=10, r=10, t=10, b=10), yaxis=dict(autorange="reversed"))
-        st.plotly_chart(fig4, width="stretch")
-    with b:
-        per = ev["per_class"][["kelas", "jumlah", "sensitivitas", "presisi", "spesifisitas", "f1"]].copy()
-        st.dataframe(per.style.format({"sensitivitas": "{:.1%}", "presisi": "{:.1%}", "spesifisitas": "{:.1%}", "f1": "{:.3f}"},
-                                      na_rep="–"), hide_index=True, width="stretch")
-        st.metric("F1 makro rekaman ini", f"{ev['macro_f1']:.3f}", help=f"Akurasi {ev['accuracy']:.1%} dari {ev['n']:,} detak")
-        name_no = rec.name.replace("MIT-BIH ", "")
-        if name_no.isdigit():
-            from src.data_loader import DS1
-            if int(name_no) in DS1:
-                st.warning("Rekaman ini termasuk **DS1** (data latih), jadi angkanya terlalu optimis. Pilih rekaman DS2 untuk uji yang jujur.")
-            else:
-                st.caption("Rekaman ini termasuk DS2: pasien yang tidak pernah dilihat model saat dilatih.")
-    st.caption("Detak F dan Q tidak ikut dinilai, sesuai kebiasaan AAMI.")
-else:
-    st.caption("Rekaman ini tidak punya anotasi kelas, jadi hasil klasifikasi tidak bisa dinilai benar atau salahnya.")
 
 with st.expander("Unduh hasil per detak (CSV)"):
     df = pd.DataFrame({"waktu_s": peaks / rec.fs, "kelas": pred})
