@@ -24,6 +24,10 @@ with st.container(border=True):
     low = c[2].number_input("f rendah (Hz)", 0.05, 5.0, 0.5, 0.05, disabled=mode == "median")
     high = c[3].number_input("f tinggi (Hz)", 10.0, 150.0, 40.0, 1.0)
     notch = c[4].selectbox("Notch (Hz)", [50, 60], disabled=mode != "bandpass_notch")
+    st.caption("Notch mengikuti frekuensi jaringan listrik setempat. **50 Hz**: Indonesia, sebagian besar Asia, Eropa, Afrika, "
+               "Australia. **60 Hz**: Amerika Serikat, Kanada, sebagian Amerika Selatan (mis. Brasil), Korea Selatan, "
+               "Taiwan, Filipina, Arab Saudi. Jepang memakai keduanya (timur 50 Hz, barat 60 Hz). "
+               "MIT-BIH direkam di AS, jadi pakai 60 Hz; rekaman sendiri di Indonesia pakai 50 Hz.")
 notch_val = float(notch) if mode == "bandpass_notch" else None
 clean = ui.cached_preprocess(rec.uid, rec, mode, low, high, order, notch_val)
 

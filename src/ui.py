@@ -4,15 +4,12 @@ Halaman web hanya memanggil fungsi di src/, sehingga angka di web sama dengan ek
 """
 from __future__ import annotations
 
-import json
-
 import numpy as np
 import plotly.graph_objects as go
 import streamlit as st
 
-from .classifier import MODEL_DIR, MODEL_NAMES, load_model, predict, predict_proba
-from .data_loader import CLASSES, DS1, DS2, Record, load_csv, load_record
-from .features import extract_features
+from .data_loader import DS1, DS2, Record, load_record
+from .file_formats import EXTENSIONS, FORMATS, default_channel, read_upload, to_record
 from .preprocessing import STANDARD, preprocess
 from .qrs_detection import heart_rate, match_beats, pan_tompkins
 from .synthetic import SAMPLES, sample_record
@@ -23,9 +20,8 @@ ACCENT = "#b3243f"
 RAW = "#9aa1b2"
 PAPER = "#fffdfc"
 GRID_MAJOR, GRID_MINOR = "rgba(214,84,108,0.32)", "rgba(214,84,108,0.12)"
-CLASS_COLORS = {"N": "#2b7a76", "S": "#c17a07", "V": "#8d2e86"}
 
-SRC_MIT, SRC_SYN, SRC_CSV = "MIT-BIH (PhysioNet)", "Contoh sintetis", "Unggah CSV"
+SRC_MIT, SRC_SYN, SRC_UP = "MIT-BIH (PhysioNet)", "Contoh sintetis", "Unggah berkas"
 
 CSS = """
 <style>
@@ -50,10 +46,10 @@ def eyebrow(text: str) -> None:
 
 
 # ---------- nilai widget yang bertahan antarhalaman ----------
-def _keep(key: str, default):
+def _keep(key: str, default, allowed=None):
     """Widget Streamlit dihapus saat pindah halaman; simpan salinannya di session_state."""
     store = f"_{key}"
-    if store not in st.session_state:
+    if store not in st.session_state or (allowed is not None and st.session_state[store] not in allowed):
         st.session_state[store] = default
     st.session_state[key] = st.session_state[store]
 
@@ -73,26 +69,29 @@ def _load_syn(sid: str) -> Record:
     return sample_record(sid)
 
 
-@st.cache_data(show_spinner=False, max_entries=4)
-def _load_csv(data: bytes, fs: float, filename: str) -> Record:
-    return load_csv(data, fs, name=filename)
+@st.cache_data(show_spinner="Membaca berkas…", max_entries=4)
+def _read(files: tuple, fs: float):
+    return read_upload(list(files), fs)
+
+
+def _upload_help() -> str:
+    return "Format yang didukung:\n\n" + "\n".join(f"- **{k}**: {v}" for k, v in FORMATS.items())
 
 
 def sidebar_record() -> Record | None:
     sb = st.sidebar
     sb.header("Rekaman")
-    _keep("src", SRC_SYN)
-    src = sb.radio("Sumber", [SRC_MIT, SRC_SYN, SRC_CSV], key="src", on_change=_save, args=("src",))
+    sources = [SRC_MIT, SRC_SYN, SRC_UP]
+    _keep("src", SRC_SYN, sources)
+    src = sb.radio("Sumber", sources, key="src", on_change=_save, args=("src",))
     rec = None
     if src == SRC_MIT:
-        _keep("mit", DS2[0])
-        name = sb.selectbox("Nomor rekaman", DS2 + DS1, key="mit", on_change=_save, args=("mit",),
-                            format_func=lambda r: f"{r} · {'uji (DS2)' if r in DS2 else 'latih (DS1)'}")
+        _keep("mit", 100)
+        name = sb.selectbox("Nomor rekaman", sorted(DS1 + DS2), key="mit", on_change=_save, args=("mit",))
         try:
             rec = _load_mit(name)
         except Exception as e:  # tanpa internet atau berkas rusak
-            sb.error(f"Rekaman {name} gagal dimuat: {e}. Periksa koneksi internet, atau jalankan "
-                     "`python -c \"from src.data_loader import download_mitdb; download_mitdb()\"` sekali.")
+            sb.error(f"Rekaman {name} gagal dimuat: {e}. Periksa koneksi internet, lalu coba lagi.")
             return None
     elif src == SRC_SYN:
         _keep("syn", "SIN-02")
@@ -100,24 +99,47 @@ def sidebar_record() -> Record | None:
                            format_func=lambda s: f"{s} · {SAMPLES[s][0]}")
         rec = _load_syn(sid)
     else:
-        _keep("csv_fs", 360)
-        fs = sb.number_input("Frekuensi sampling (Hz)", 50, 2000, step=1, key="csv_fs",
-                             on_change=_save, args=("csv_fs",))
-        up = sb.file_uploader("Berkas CSV satu kolom", type=["csv", "txt"],
-                              help="Satu nilai sinyal (mV) per baris, boleh dengan satu baris judul. 10 detik sampai 30 menit.")
-        if up is not None:
-            st.session_state["upload"] = (up.getvalue(), up.name)
-        if "upload" not in st.session_state:
-            sb.info("Unggah berkas untuk mulai. Isi frekuensi sampling lebih dulu.")
-            return None
-        data, fname = st.session_state["upload"]
-        try:
-            rec = _load_csv(data, float(fs), fname)
-        except ValueError as e:
-            sb.error(str(e))
+        rec = _upload_section(sb)
+        if rec is None:
             return None
     sb.caption(rec.description)
     return rec
+
+
+def _upload_section(sb) -> Record | None:
+    ups = sb.file_uploader("Berkas EKG", type=EXTENSIONS, accept_multiple_files=True,
+                           help=_upload_help())
+    if ups:
+        st.session_state["upload"] = tuple((u.name, u.getvalue()) for u in ups)
+    _keep("up_fs", 360)
+    fs = sb.number_input("Frekuensi sampling (Hz)", 50, 2000, step=1, key="up_fs", on_change=_save, args=("up_fs",),
+                         help="Dipakai untuk CSV/TXT dan .mat yang tidak menyimpan frekuensi sampling. "
+                              "WFDB, EDF, dan HL7 aECG membaca nilainya dari berkas.")
+    with sb.expander("Format yang didukung"):
+        st.markdown(_upload_help())
+    if "upload" not in st.session_state:
+        sb.info("Unggah berkas untuk mulai. Untuk WFDB, pilih .hea dan .dat (serta .atr bila ada) sekaligus.")
+        return None
+    files = st.session_state["upload"]
+    try:
+        up = _read(files, float(fs))
+    except ValueError as e:
+        sb.error(str(e))
+        return None
+    except Exception as e:  # berkas rusak atau format tak terduga
+        sb.error(f"Berkas tidak bisa dibaca ({type(e).__name__}: {e}). Periksa formatnya.")
+        return None
+    names = list(up.channels)
+    ch = default_channel(up)
+    if len(names) > 1:
+        _keep("up_ch", ch, names)
+        ch = sb.selectbox("Sadapan", names, key="up_ch", on_change=_save, args=("up_ch",),
+                          help="Rekaman berisi beberapa sadapan. Sadapan II (MLII) paling mirip dengan MIT-BIH.")
+    try:
+        return to_record(up, ch)
+    except ValueError as e:
+        sb.error(str(e))
+        return None
 
 
 def window_controls(rec: Record) -> tuple[float, float]:
@@ -139,7 +161,7 @@ def window_controls(rec: Record) -> tuple[float, float]:
     return start, start + width
 
 
-# ---------- analisis standar (sama dengan eksperimen) ----------
+# ---------- analisis standar ----------
 @st.cache_data(show_spinner="Menyaring sinyal…", max_entries=16)
 def cached_preprocess(uid: str, _rec: Record, mode: str, low: float, high: float, order: int, notch):
     return preprocess(_rec.signal, _rec.fs, mode=mode, low=low, high=high, order=order, notch=notch)
@@ -153,40 +175,6 @@ def cached_detection(uid: str, _rec: Record) -> dict:
     if _rec.has_annotations:
         out["match"] = match_beats(pt.peaks, _rec.r_peaks, _rec.fs)
     return out
-
-
-@st.cache_resource(show_spinner="Memuat model…")
-def load_models() -> dict:
-    out = {}
-    for k in MODEL_NAMES:
-        m, meta = load_model(k)
-        if m is not None:
-            out[k] = (m, meta)
-    return out
-
-
-def load_results() -> dict | None:
-    p = MODEL_DIR / "results.json"
-    return json.loads(p.read_text(encoding="utf-8")) if p.exists() else None
-
-
-def models_missing_message() -> None:
-    st.warning("Model belum ada. Jalankan `python train.py` (MIT-BIH) atau `python train.py --synthetic` "
-               "(cepat, tanpa internet) dari folder proyek, lalu muat ulang halaman ini.")
-
-
-@st.cache_data(show_spinner="Mengklasifikasikan detak…", max_entries=16)
-def cached_classification(uid: str, _rec: Record, model_key: str, _model) -> dict:
-    det = cached_detection(uid, _rec)
-    F = extract_features(det["clean"], det["peaks"], _rec.fs)
-    pred = predict(_model, F)
-    prob = predict_proba(_model, F)
-    truth = None
-    if det["match"] is not None:
-        truth = np.full(len(det["peaks"]), "", dtype=object)
-        for i, j in det["match"][0]:
-            truth[i] = _rec.labels[j]
-    return {"features": F, "pred": pred, "prob": prob, "truth": truth}
 
 
 # ---------- grafik ----------
@@ -216,10 +204,3 @@ def add_trace(fig, x, fs, t0, t1, color=INK, width=1.3, name=""):
     fig.add_trace(go.Scatter(x=t, y=y, mode="lines", line=dict(color=color, width=width), name=name,
                              hovertemplate="%{x:.3f} s · %{y:.3f} mV<extra></extra>"))
     return fig
-
-
-def class_label(c: str) -> str:
-    return {"N": "N · Normal", "S": "S · Supraventrikular prematur", "V": "V · Ventrikular prematur"}.get(c, c)
-
-
-__all__ = ["CLASSES", "CLASS_COLORS"]

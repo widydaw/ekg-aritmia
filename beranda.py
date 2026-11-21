@@ -7,25 +7,23 @@ from src.synthetic import beat_shape, make_profile
 
 ui.page_setup("Beranda")
 
-ui.eyebrow("Pengolahan sinyal digital · MIT-BIH · kelas AAMI")
-st.title("Analisis dan Klasifikasi Sinyal EKG untuk Deteksi Aritmia")
+ui.eyebrow("Pengolahan sinyal digital · MIT-BIH · Pan-Tompkins")
+st.title("Analisis Sinyal EKG untuk Deteksi Aritmia")
 st.markdown(
-    "Sistem ini menerima sinyal EKG, membersihkannya dengan filter digital, menemukan setiap detak "
-    "dengan algoritma Pan-Tompkins, lalu menentukan apakah detak itu **normal (N)**, **prematur "
-    "supraventrikular (S)**, atau **prematur ventrikular (V)**. Hasilnya ditampilkan beserta ukuran kinerja metodenya."
+    "Aplikasi ini menerima sinyal EKG, membersihkannya dengan filter digital, lalu menemukan setiap detak "
+    "dengan algoritma Pan-Tompkins. Dari posisi detak dihitung detak jantung (HR) dan variabilitasnya, "
+    "sehingga irama yang tidak teratur dan detak prematur bisa terlihat."
 )
 
 c1, c2 = st.columns([1.1, 1], gap="large")
 with c1:
     st.subheader("Alur pengolahan")
     steps = [
-        ("Sinyal EKG", "Deretan angka aktivitas listrik jantung, 360 Hz pada MIT-BIH."),
-        ("Praproses", "Band-pass Butterworth 0,5–40 Hz, disaring dua arah."),
-        ("Deteksi puncak R", "Pan-Tompkins buatan sendiri. HR = 60 / RR."),
-        ("Segmentasi dan fitur", "Segmen −0,2 s s.d. +0,4 s: fitur RR, morfologi, wavelet db4."),
-        ("Klasifikasi", "Random Forest, dengan SVM dan k-NN sebagai pembanding."),
-        ("Evaluasi", "Data uji dari pasien berbeda (DS1 → DS2)."),
-        ("Aplikasi web", "Sinyal, puncak R, HR, kelas tiap detak, dan metrik."),
+        ("Sinyal EKG", "Rekaman MIT-BIH, contoh sintetis, atau berkas Anda sendiri (WFDB, EDF, HL7 aECG, MAT, CSV)."),
+        ("Praproses", "Band-pass Butterworth 0,5–40 Hz, disaring dua arah, dengan pilihan notch 50/60 Hz."),
+        ("Deteksi puncak R", "Pan-Tompkins buatan sendiri, dibandingkan dengan anotasi dokter bila ada."),
+        ("Detak jantung", "HR = 60 / RR, serta SDNN dan RMSSD untuk variabilitas irama."),
+        ("Aplikasi web", "Sinyal asli dan bersih, spektrum, puncak R, monitor berjalan, dan grafik RR."),
     ]
     for i, (h, d) in enumerate(steps, 1):
         st.markdown(f"**{i}. {h}** — {d}")
@@ -52,11 +50,8 @@ st.subheader("Rumusan masalah")
 rm = [
     ("Analisis Sinyal", "Bagaimana merancang filter digital untuk membuang derau EKG, dan seberapa besar perbaikannya?"),
     ("Deteksi R", "Seberapa akurat Pan-Tompkins buatan sendiri dibanding anotasi dokter?"),
-    ("Evaluasi Model", "Kelompok fitur apa (RR, morfologi, wavelet) yang paling membedakan N, S, dan V?"),
-    ("Evaluasi Model", "Metode mana (Random Forest, SVM, k-NN) yang terbaik pada pembagian per pasien?"),
-    ("Klasifikasi", "Bagaimana menyatukan seluruh alur ke aplikasi web yang akurat dan cukup cepat?"),
 ]
-cols = st.columns(5)
+cols = st.columns(2)
 for i, (col, (page, q)) in enumerate(zip(cols, rm), 1):
     with col.container(border=True):
         st.markdown(f"**RM {i}**")
@@ -65,14 +60,9 @@ for i, (col, (page, q)) in enumerate(zip(cols, rm), 1):
 
 st.subheader("Cara memakai")
 st.markdown(
-    "1. Pilih sumber rekaman di panel kiri: rekaman **MIT-BIH** (diunduh dari PhysioNet), **contoh sintetis**, "
-    "atau **unggah CSV** satu kolom beserta frekuensi samplingnya.\n"
+    "1. Pilih sumber rekaman di panel kiri: **MIT-BIH** (diunduh dari PhysioNet), **contoh sintetis**, "
+    "atau **unggah berkas** EKG Anda sendiri.\n"
     "2. Buka **Analisis Sinyal** untuk membandingkan sinyal asli, sinyal bersih, dan spektrumnya.\n"
-    "3. Buka **Deteksi R** untuk melihat puncak R, HR, dan tahapan Pan-Tompkins.\n"
-    "4. Buka **Klasifikasi** untuk melihat kelas tiap detak dan mengunduh hasilnya, lalu **Evaluasi Model** "
-    "untuk kinerja pada pasien yang belum pernah dilihat model."
+    "3. Buka **Deteksi R** untuk melihat puncak R, HR, monitor berjalan, dan tahapan Pan-Tompkins."
 )
-
-if not ui.load_models():
-    ui.models_missing_message()
 st.caption("Untuk pembelajaran, bukan alat diagnosis medis.")

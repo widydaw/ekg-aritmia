@@ -110,11 +110,10 @@ def load_record(name, data_dir: Path = DATA_DIR, lead: str = "MLII", download: b
     sym = np.asarray(ann.symbol)
     smp = np.asarray(ann.sample)
     keep = np.isin(sym, list(AAMI))
-    role = "uji (DS2)" if int(name) in DS2 else "latih (DS1)" if int(name) in DS1 else "di luar DS1/DS2"
     return Record(
         uid=f"mitdb-{name}", name=f"MIT-BIH {name}", signal=sig, fs=float(rec.fs),
         r_peaks=smp[keep], labels=np.array([AAMI[s] for s in sym[keep]]), lead=lead,
-        description=f"Rekaman {name}, kanal {lead}, {rec.fs:.0f} Hz, data {role}.",
+        description=f"MIT-BIH rekaman {name}, kanal {lead}, {rec.fs:.0f} Hz, {len(sig) / rec.fs / 60:.0f} menit. Dengan anotasi detak.",
     )
 
 

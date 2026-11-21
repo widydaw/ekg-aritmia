@@ -1,8 +1,7 @@
-# Analisis dan Klasifikasi Sinyal EKG untuk Deteksi Aritmia
+# Analisis Sinyal EKG untuk Deteksi Aritmia
 
-Aplikasi Streamlit yang menerima sinyal EKG, menyaringnya dengan filter digital, mendeteksi puncak R
-dengan Pan-Tompkins buatan sendiri, mengekstraksi fitur RR, morfologi, dan wavelet, lalu
-mengklasifikasikan tiap detak ke kelas AAMI **N**, **S**, atau **V**.
+Aplikasi Streamlit yang menerima sinyal EKG, menyaringnya dengan filter digital, lalu mendeteksi
+puncak R dengan Pan-Tompkins buatan sendiri untuk menghitung detak jantung (HR) dan variabilitasnya.
 
 > Untuk pembelajaran, bukan alat diagnosis medis.
 
@@ -24,80 +23,64 @@ lolos. Jika path folder proyek sangat panjang, buat `.venv` di path pendek (misa
 ## Menjalankan
 
 ```bash
-python train.py              # unduh MIT-BIH (±100 MB ke data/mitdb), latih DS1, uji DS2
 streamlit run app.py         # buka http://localhost:8501
-```
-
-Pilihan lain:
-
-```bash
-python train.py --tune       # + setel parameter Random Forest dengan GroupKFold per rekaman
-python train.py --synthetic  # data sintetis, beberapa detik, tanpa internet (hanya uji coba)
 pip install -r requirements-dev.txt && pytest   # uji fungsi tanpa membuka web
 ```
 
 Untuk membagikan aplikasi lewat internet (Streamlit Community Cloud), ikuti [DEPLOY.md](DEPLOY.md).
-
-`train.py` menyimpan `models/rf.joblib`, `svm.joblib`, `knn.joblib`, dan `models/results.json`
-(confusion matrix, metrik per kelas, perbandingan model dan kelompok fitur, pembagian acak vs per
-pasien, serta evaluasi end-to-end dengan detektor sendiri). Aplikasi web hanya memuat berkas ini.
 
 ## Halaman
 
 | Halaman | Isi |
 |---|---|
 | Beranda | Ringkasan, alur pengolahan, rumusan masalah, petunjuk |
-| Analisis Sinyal | Sinyal asli dan bersih, spektrum Welch, perbandingan konfigurasi filter (RM 1) |
-| Deteksi R | Puncak R, HR, SDNN, RMSSD, Se/PPV terhadap anotasi, tahapan Pan-Tompkins (RM 2) |
-| Klasifikasi | Detak berwarna N/S/V, bentuk detak per kelas, tabel, unduh CSV (RM 5) |
-| Evaluasi Model | Confusion matrix, metrik per kelas, RF vs SVM vs k-NN, kelompok fitur, fitur penting (RM 3, RM 4) |
-| Tentang | Dataset, metode, keterbatasan, rujukan |
+| Analisis Sinyal | Sinyal asli dan bersih, spektrum Welch, perbandingan konfigurasi filter, keterangan notch 50/60 Hz (RM 1) |
+| Deteksi R | Puncak R, HR, SDNN, RMSSD, Se/PPV terhadap anotasi, monitor berjalan, tahapan Pan-Tompkins (RM 2) |
+| Tentang | Dataset, format berkas, metode, data latihan, rujukan |
 
-Sumber rekaman dipilih di panel kiri: **MIT-BIH** (diunduh per rekaman bila belum ada),
-**contoh sintetis** (label acuan dan sinyal bersih diketahui), atau **unggah CSV** satu kolom
-dengan frekuensi sampling 50–2000 Hz, 10 detik sampai 30 menit (disampel ulang ke 360 Hz).
+## Sumber rekaman
+
+Dipilih di panel kiri:
+
+- **MIT-BIH** — 44 rekaman, diunduh dari PhysioNet saat dipilih.
+- **Contoh sintetis** — 6 rekaman 60 detik dengan anotasi dan sinyal bersih acuan.
+- **Unggah berkas** — format standar EKG:
+
+| Format | Berkas | Catatan |
+|---|---|---|
+| WFDB (PhysioNet) | `.hea` + `.dat` atau `.mat`, opsional `.atr` / `.qrs` | Unggah sekaligus; anotasi dipakai untuk Se/PPV |
+| EDF / EDF+ | `.edf` | fs dan satuan dari header |
+| HL7 aECG | `.xml` | Standar FDA |
+| MATLAB | `.mat` | Isi fs manual |
+| CSV / TXT | `.csv`, `.txt` | Satu kolom per sadapan; kolom waktu dikenali, fs bisa dihitung darinya |
+
+Sinyal diubah ke mV, sadapan bisa dipilih (II/MLII diutamakan), lalu disampel ulang ke 360 Hz.
+Rekaman 10 detik sampai 30 menit; yang lebih panjang dipotong ke 30 menit pertama.
 
 ## Struktur
 
 ```
-app.py                  Beranda
-pages/                  Analisis, Deteksi R, Klasifikasi, Evaluasi, Tentang
-train.py                pelatihan dan evaluasi DS1 → DS2
+app.py                  navigasi halaman
+beranda.py              Beranda
+pages/                  Analisis Sinyal, Deteksi R, Tentang
 src/
-  data_loader.py        MIT-BIH (wfdb), kelas AAMI, DS1/DS2, CSV
+  data_loader.py        MIT-BIH (wfdb), anotasi, sampel ulang
+  file_formats.py       pembaca WFDB, EDF/EDF+, HL7 aECG, MAT, CSV/TXT
   preprocessing.py      band-pass, notch, median; spektrum dan metrik filter
   qrs_detection.py      Pan-Tompkins, pencocokan dengan anotasi, HR/HRV
-  features.py           segmentasi dan 38 fitur (RR, morfologi, wavelet db4, relatif pasien)
-  classifier.py         RF, SVM, k-NN; simpan dan muat dengan joblib
-  evaluation.py         confusion matrix dan metrik per kelas
-  synthetic.py          sinyal sintetis untuk demo, tes, dan fungsi tiruan
+  monitor.py            monitor EKG berjalan
+  synthetic.py          sinyal sintetis untuk demo dan tes
   ui.py                 komponen bersama Streamlit (cache, pemilih rekaman, grafik)
-models/                 model terlatih dan results.json
-data/                   rekaman MIT-BIH (tidak di-commit)
-tests/                  pengujian fungsi
+tests/                  pengujian fungsi dan format berkas
 ```
 
-Antarmuka fungsi yang disepakati:
+Berkas klasifikasi lama (`train.py`, `src/features.py`, `src/classifier.py`, `src/evaluation.py`,
+`models/`) tidak lagi dipakai oleh aplikasi web.
+
+Antarmuka fungsi:
 
 ```python
-preprocess(sinyal, fs)                          # -> sinyal bersih
-detect_r_peaks(sinyal_bersih, fs)               # -> indeks puncak R
-extract_features(sinyal_bersih, puncak_r, fs)   # -> matriks fitur (n_detak × 30)
-predict(model, fitur)                           # -> label kelas
-evaluate(label_benar, label_prediksi)           # -> confusion matrix dan metrik per kelas
+preprocess(sinyal, fs)                 # -> sinyal bersih
+detect_r_peaks(sinyal_bersih, fs)      # -> indeks puncak R
+read_upload([(nama, bytes), ...], fs)  # -> semua sadapan berkas unggahan
 ```
-
-## Catatan metode
-
-- Kanal MLII; rekaman alat pacu 102, 104, 107, 217 dibuang. Kelas F dan Q tidak diklasifikasi.
-- Fitur latih diambil pada posisi R dari anotasi; di web dan evaluasi end-to-end dipakai detektor sendiri.
-- Fitur relatif pasien (8): RR dibagi rata-rata rekaman, korelasi detak/QRS/daerah P dengan detak median
-  pasien, selisih daerah P, rasio amplitudo R, dan selisih lebar QRS. Fitur ini membantu kelas S pada
-  pembagian per pasien. `extract_features` harus dipanggil per rekaman utuh.
-- Bobot keputusan per kelas (kelas = argmax probabilitas × bobot) disetel dengan GroupKFold per
-  rekaman pada DS1 saja, lalu dipakai apa adanya di DS2. Matikan dengan `--no-weights`.
-- Hasil MIT-BIH saat ini (DS2): Random Forest F1 makro 0,787; kelas S sensitivitas 88,8%,
-  presisi 30,1%. Tanpa fitur relatif dan bobot: F1 makro 0,681, sensitivitas S 7,6%.
-- Bobot kelas seimbang. SVM dilatih pada semua detak S dan V serta maksimal 8.000 detak N
-  (`--svm-cap`) karena biayanya kuadratik.
-- Cocokkan kembali daftar DS1/DS2 dan sitasi dengan sumber aslinya sebelum dipakai di laporan.
