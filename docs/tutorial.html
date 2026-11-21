@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tutorial Aplikasi EKG Aritmia</title>
+<style>
+/* Pemutar tutorial: layar aplikasi tiruan berskala di kiri, daftar bab di kanan (bertumpuk di HP) */
+:root{--bg:#fbf7f6;--surface:#fff;--ink:#1b2130;--ink2:#4b5366;--ink3:#868c9c;--line:#ecdfe1;--line2:#dcc9cd;--accent:#b3243f;--accent-ink:#fff;--soft:rgba(179,36,63,.08)}
+@media (prefers-color-scheme:dark){:root{--bg:#0f131c;--surface:#161b26;--ink:#ede8ea;--ink2:#b5b2bd;--ink3:#7e8293;--line:#262c3a;--line2:#343b4c;--accent:#ff6f88;--accent-ink:#1b0b10;--soft:rgba(255,111,136,.1);color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+header{padding-block:22px 14px;display:flex;flex-direction:column;gap:6px}
+.back{color:var(--accent);text-decoration:none;font-size:.95rem}
+h1{font-size:clamp(1.6rem,3.4vw,2.3rem);line-height:1.12;margin:0;letter-spacing:-.02em}
+.lead{color:var(--ink2);max-width:72ch;margin:0}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:22px;padding-block:6px 44px;align-items:start}
+@media (max-width:980px){.layout{grid-template-columns:minmax(0,1fr)}}
+.player{display:flex;flex-direction:column;gap:12px;min-width:0}
+.stage-wrap{position:relative;width:100%;border-radius:14px;overflow:hidden;border:1px solid var(--line2);background:#e9e2e4}
+.stage{position:absolute;left:0;top:0;width:1000px;height:620px;transform-origin:0 0;color:#1b2130;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px}
+.btn{font:inherit;font-size:.92rem;font-weight:500;border:1px solid var(--line2);background:var(--surface);color:var(--ink);border-radius:10px;padding:8px 14px;cursor:pointer;min-height:44px}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);min-width:100px}
+.btn:focus-visible,.chap:focus-visible,.seg button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.seg{display:inline-flex;border:1px solid var(--line2);border-radius:10px;padding:2px;background:var(--surface)}
+.seg button{font:inherit;font-size:.85rem;border:0;background:transparent;color:var(--ink2);padding:6px 10px;border-radius:8px;cursor:pointer;min-height:38px}
+.seg button.on{background:var(--accent);color:var(--accent-ink)}
+.count{font-size:.85rem;color:var(--ink3);font-variant-numeric:tabular-nums;margin-left:auto}
+.progress{display:flex;gap:3px;height:7px}
+.progress button{flex:1;border:0;padding:0;border-radius:4px;background:var(--line);cursor:pointer;position:relative;overflow:hidden}
+.progress button span{position:absolute;inset:0;width:0;background:var(--accent)}
+.caption{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:4px;min-height:100px}
+.caption .ch{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:700}
+.caption p{margin:0;font-size:1.04rem;max-width:80ch}
+.note{font-size:.82rem;color:var(--ink3);margin:0}
+aside{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:4px}
+aside h2{font-size:1.05rem;margin:4px 6px 8px}
+.chap{display:grid;grid-template-columns:28px minmax(0,1fr);gap:8px;text-align:left;font:inherit;border:0;background:transparent;color:var(--ink);padding:9px 8px;border-radius:10px;cursor:pointer;width:100%}
+.chap:hover,.chap.on{background:var(--soft)}
+.chap .n{font-size:.8rem;color:var(--ink3);padding-top:2px;font-variant-numeric:tabular-nums}
+.chap b{display:block;font-size:.94rem}
+.chap small{color:var(--ink3);font-size:.8rem;line-height:1.35;display:block}
+.chap.on .n,.chap.on b{color:var(--accent)}
+.chap.done .n::after{content:" ✓"}
+
+/* ---------- layar tiruan, selalu terang seperti aplikasinya ---------- */
+.bw{position:absolute;inset:0;background:#fbf7f6;display:flex;flex-direction:column}
+.bar{height:44px;background:#e9e2e4;display:flex;align-items:center;gap:12px;padding:0 14px;border-bottom:1px solid #dcc9cd;flex:none}
+.dots{display:flex;gap:6px}.dots i{width:11px;height:11px;border-radius:50%;background:#cdbfc3}
+.url{flex:1;height:28px;background:#fff;border-radius:14px;display:flex;align-items:center;padding:0 14px;font-size:13px;gap:6px;border:1px solid #dcc9cd}
+.caret{display:inline-block;width:1px;height:15px;background:#1b2130;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.ill{position:absolute;right:12px;bottom:10px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#868c9c;background:rgba(255,255,255,.9);padding:3px 8px;border-radius:6px;border:1px solid #ecdfe1;z-index:5}
+.blank{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:#868c9c;font-size:14px}
+.blank .g{width:420px;height:40px;border-radius:20px;border:1px solid #dcc9cd;background:#fff}
+.app{flex:1;display:flex;min-height:0}
+.sb{width:236px;background:#f3e9eb;border-right:1px solid #ecdfe1;padding:14px 12px;display:flex;flex-direction:column;gap:9px;flex:none;font-size:12.5px;overflow:hidden}
+.nav a{display:flex;align-items:center;gap:8px;padding:6px 9px;border-radius:7px;color:#4b5366}
+.nav a.on{background:#e6d3d7;color:#1b2130;font-weight:600}
+.nav a i{width:13px;height:13px;border-radius:4px;border:1.6px solid currentColor;opacity:.7}
+.sbsec{border-top:1px solid #dcc9cd;padding-top:9px;display:flex;flex-direction:column;gap:6px}
+.sbsec h4{margin:0;font-size:13px}
+.lab{font-size:11.5px;color:#4b5366}
+.radio{display:flex;align-items:center;gap:7px;padding:1px 0}
+.radio i{width:13px;height:13px;border-radius:50%;border:1.6px solid #868c9c;position:relative;flex:none}
+.radio.on i{border-color:#b3243f}.radio.on i::after{content:"";position:absolute;inset:2px;border-radius:50%;background:#b3243f}
+.sel{background:#fff;border:1px solid #dcc9cd;border-radius:7px;padding:5px 9px;display:flex;justify-content:space-between;position:relative}
+.sel::after{content:"▾";color:#868c9c}
+.opts{position:absolute;left:0;right:0;top:100%;margin-top:3px;background:#fff;border:1px solid #dcc9cd;border-radius:7px;box-shadow:0 8px 20px -10px rgba(0,0,0,.3);z-index:4;overflow:hidden}
+.opts div{padding:5px 9px}.opts div.hl{background:#f3e9eb}
+.cap{font-size:10.5px;color:#868c9c;line-height:1.35}
+.slider{height:18px;position:relative}
+.slider .tr{position:absolute;left:0;right:0;top:8px;height:3px;border-radius:2px;background:#dcc9cd}
+.slider .fl{position:absolute;left:0;top:8px;height:3px;border-radius:2px;background:#b3243f}
+.slider .knob{position:absolute;top:2px;width:15px;height:15px;border-radius:50%;background:#b3243f;margin-left:-7px}
+.sval{font:11px ui-monospace,Consolas,monospace;color:#b3243f}
+.segm{display:flex;gap:2px;background:#fff;border:1px solid #dcc9cd;border-radius:7px;padding:2px}
+.segm span{flex:1;text-align:center;padding:2px 0;border-radius:5px;font-size:11px;color:#4b5366}
+.segm span.on{background:#b3243f;color:#fff}
+.inp{background:#fff;border:1px solid #dcc9cd;border-radius:7px;padding:4px 9px;font:12px ui-monospace,Consolas,monospace}
+.upl{border:1.5px dashed #c9b1b6;border-radius:8px;padding:9px;text-align:center;color:#4b5366;background:#fff;font-size:11px}
+.files{display:flex;flex-direction:column;gap:3px}
+.file{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid #dcc9cd;border-radius:6px;padding:3px 8px;font:11px ui-monospace,Consolas,monospace}
+.file i{width:9px;height:12px;border:1.5px solid #4b5366;border-radius:2px}
+.disc{margin-top:auto;color:#a86400;font-size:11px}
+.main{flex:1;overflow:hidden;padding:20px 28px;position:relative;min-width:0}
+.pg{display:none;flex-direction:column;gap:11px}
+.pg.on{display:flex}
+.ey{font:500 10px ui-monospace,Consolas,monospace;letter-spacing:.12em;text-transform:uppercase;color:#b3243f}
+.pg h2{font-size:23px;line-height:1.15;letter-spacing:-.02em;margin:0}
+.pg p{margin:0;font-size:12.5px;color:#4b5366;line-height:1.5}
+.tiles{display:flex;gap:9px}
+.tile{flex:1;border:1px solid #ecdfe1;background:#fff;border-radius:9px;padding:6px 9px;min-width:0}
+.tile .k{font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:#868c9c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile .v{font:600 17px ui-monospace,Consolas,monospace}
+.tile .v small{font-size:11px;color:#868c9c;font-weight:400}
+.panel{border:1px solid #ecdfe1;background:#fff;border-radius:9px;padding:7px 10px}
+.panel .ph{font-weight:600;font-size:12px;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+canvas{display:block;width:100%}
+.pipe{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.pipe div{border-top:2px solid #b3243f;padding-top:6px;font-size:11px;color:#4b5366}
+.pipe b{display:block;color:#1b2130;font-size:11.5px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.chipbtn{border:1px solid #dcc9cd;border-radius:7px;padding:3px 9px;font-size:11.5px;background:#fff}
+.chipbtn.on{border-color:#b3243f;background:#b3243f;color:#fff}
+.mini{font-size:10.5px;color:#868c9c;line-height:1.4}
+.mbar{display:flex;align-items:center;gap:12px;font-size:11px;color:#4b5366;padding:3px 2px 6px}
+.mbar .ro{margin-left:auto;display:flex;gap:14px;font-family:ui-monospace,Consolas,monospace}
+.mbar .ro b{font-size:15px;color:#1b2130}.mbar .ro b.hr{color:#b3243f}
+.chk{display:inline-flex;align-items:center;gap:5px}
+.chk i{width:12px;height:12px;border:1.5px solid #868c9c;border-radius:3px;position:relative}
+.chk.on i{background:#b3243f;border-color:#b3243f}
+.chk.on i::after{content:"";position:absolute;left:3px;top:0;width:3px;height:7px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+table.mt{border-collapse:collapse;width:100%;font-size:10.5px}
+table.mt th{font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;color:#868c9c;text-align:left;padding:4px 6px;border-bottom:1px solid #ecdfe1}
+table.mt td{padding:4px 6px;border-bottom:1px solid #f3eaec}
+#cursor{position:absolute;left:0;top:0;width:22px;height:22px;z-index:20;pointer-events:none;transition-property:transform;transition-timing-function:cubic-bezier(.45,.05,.25,1)}
+#ripple{position:absolute;width:36px;height:36px;margin:-18px 0 0 -18px;border-radius:50%;border:2.5px solid #b3243f;z-index:19;pointer-events:none;opacity:0}
+#ripple.go{animation:rip .55s ease-out}
+@keyframes rip{0%{opacity:.9;transform:scale(.3)}100%{opacity:0;transform:scale(1.4)}}
+#ring{position:absolute;z-index:18;pointer-events:none;border:2.5px solid #b3243f;border-radius:10px;box-shadow:0 0 0 4000px rgba(27,33,48,.12);opacity:0;transition:opacity .35s,left .35s,top .35s,width .35s,height .35s}
+#ring.on{opacity:1;animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{border-color:rgba(179,36,63,.45)}}
+@media (prefers-reduced-motion:reduce){#ring.on{animation:none}#cursor{transition:none!important}.caret{animation:none}}
+</style>
+</head>
+<body>
+<header class="wrap">
+  <a class="back" href="index.html">← Belajar Aplikasi EKG Aritmia</a>
+  <h1>Tutorial Aplikasi EKG Aritmia</h1>
+  <p class="lead">Tonton kursor menjalankan aplikasi langkah demi langkah. Klik bab untuk melompat, atau pakai tombol di bawah layar. Sudah paham? Uji diri Anda di <a href="kuis.html" style="color:var(--accent)">Kuis</a>.</p>
+</header>
+
+<main class="wrap layout">
+  <section class="player">
+    <div class="stage-wrap" id="stageWrap">
+      <div class="stage" id="stage">
+        <div class="bw">
+          <div class="bar"><div class="dots"><i></i><i></i><i></i></div><div class="url" id="url"><span id="urlText"></span><span class="caret" id="caret"></span></div></div>
+          <div class="blank" id="blank"><div class="g"></div><span>Tab baru</span></div>
+          <div class="app" id="app">
+            <aside class="sb">
+              <nav class="nav">
+                <a data-p="beranda" id="nv-beranda"><i></i>Beranda</a>
+                <a data-p="analisis" id="nv-analisis"><i></i>Analisis Sinyal</a>
+                <a data-p="deteksi" id="nv-deteksi"><i></i>Deteksi R</a>
+                <a data-p="tentang" id="nv-tentang"><i></i>Tentang</a>
+              </nav>
+              <div class="sbsec" id="sbRec">
+                <h4>Rekaman</h4>
+                <span class="lab">Sumber</span>
+                <div class="radio" id="srcMit"><i></i>MIT-BIH (PhysioNet)</div>
+                <div class="radio" id="srcSyn"><i></i>Contoh sintetis</div>
+                <div class="radio" id="srcUp"><i></i>Unggah berkas</div>
+                <div id="recBox">
+                  <span class="lab" id="recLab">Contoh</span>
+                  <div class="sel" id="recSel"><span id="recVal">SIN-02 · PVC sering</span>
+                    <div class="opts" id="opts" hidden><div id="opt100" class="hl">100</div><div>101</div><div>103</div><div>105</div></div>
+                  </div>
+                </div>
+                <div id="upBox" hidden>
+                  <span class="lab">Berkas EKG</span>
+                  <div class="upl" id="upl">Seret berkas ke sini atau <b>Browse files</b><br><span class="mini">HEA, DAT, ATR, QRS, EDF, XML, MAT, CSV, TXT</span></div>
+                  <div class="files" id="files" hidden><div class="file"><i></i>100.hea</div><div class="file"><i></i>100.dat</div><div class="file"><i></i>100.atr</div></div>
+                  <span class="lab">Frekuensi sampling (Hz)</span><div class="inp">360</div>
+                  <div id="leadBox" hidden><span class="lab">Sadapan</span><div class="sel" id="leadSel"><span>MLII</span></div></div>
+                </div>
+                <div class="cap" id="recCap"></div>
+                <h4>Jendela waktu</h4>
+                <span class="lab">Lebar (detik)</span>
+                <div class="segm"><span>5</span><span class="on">10</span><span>20</span><span>30</span></div>
+                <span class="lab">Mulai (detik) <span class="sval" id="sval">0,0</span></span>
+                <div class="slider" id="slider"><div class="tr"></div><div class="fl" id="sfill"></div><div class="knob" id="knob"></div></div>
+              </div>
+              <div class="disc">Untuk pembelajaran, bukan alat diagnosis medis.</div>
+            </aside>
+            <section class="main">
+              <div class="pg" id="pg-beranda">
+                <span class="ey">Pengolahan sinyal digital · MIT-BIH · Pan-Tompkins</span>
+                <h2>Analisis Sinyal EKG untuk Deteksi Aritmia</h2>
+                <p>Aplikasi menyaring sinyal EKG, menemukan setiap detak dengan Pan-Tompkins, lalu menghitung detak jantung (HR) dan variabilitasnya.</p>
+                <div class="pipe" id="pipe"><div><b>1 Sinyal</b>MIT-BIH atau berkas Anda</div><div><b>2 Praproses</b>0,5–40 Hz, notch</div><div><b>3 Deteksi R</b>Pan-Tompkins</div><div><b>4 Detak jantung</b>HR, SDNN, RMSSD</div><div><b>5 Web</b>grafik dan monitor</div></div>
+                <div class="panel"><div class="ph">Satu siklus detak <span class="sval">RR = 0,80 s → 75 bpm</span></div><canvas id="cvBeat" height="190"></canvas></div>
+              </div>
+              <div class="pg" id="pg-analisis">
+                <span class="ey">RM 1 · Praproses</span>
+                <h2>Analisis sinyal dan perancangan filter</h2>
+                <div class="panel" id="fPanel">
+                  <div class="row"><span class="lab">Konfigurasi</span><span class="chipbtn on" id="fBp">Band-pass Butterworth</span><span class="chipbtn" id="fBpn">Band-pass + notch</span><span class="chipbtn" id="fMed">Filter median + low-pass</span><span class="lab" style="margin-left:auto">Notch</span><span class="chipbtn" id="fNotch">60 Hz</span></div>
+                  <p class="mini" id="notchCap" style="margin-top:5px">Notch mengikuti frekuensi jaringan listrik setempat. <b>50 Hz</b>: Indonesia, sebagian besar Asia, Eropa, Afrika, Australia. <b>60 Hz</b>: AS, Kanada, Brasil, Korea Selatan, Taiwan, Filipina, Arab Saudi. Jepang memakai keduanya. MIT-BIH direkam di AS, jadi pakai 60 Hz.</p>
+                </div>
+                <div class="tiles"><div class="tile"><div class="k">Baseline &lt; 0,5 Hz</div><div class="v">−31,8 <small>dB</small></div></div><div class="tile"><div class="k">Jala-jala 50/60 Hz</div><div class="v" id="t2">−22,4 <small>dB</small></div></div><div class="tile"><div class="k">Derau &gt; 40 Hz</div><div class="v">−20,9 <small>dB</small></div></div></div>
+                <div class="panel" id="anRaw"><div class="ph">Sinyal asli</div><canvas id="cvRaw" height="78"></canvas></div>
+                <div class="panel" id="anClean"><div class="ph">Setelah penyaringan</div><canvas id="cvClean" height="78"></canvas></div>
+                <div class="panel" id="anPsd"><div class="ph">Spektrum daya (Welch) <span class="sval">abu-abu = sebelum · merah = sesudah</span></div><canvas id="cvPsd" height="62"></canvas></div>
+              </div>
+              <div class="pg" id="pg-deteksi">
+                <span class="ey">RM 2 · Deteksi puncak R</span>
+                <h2>Pan-Tompkins dan detak jantung</h2>
+                <div class="tiles" id="dtStats"><div class="tile"><div class="k">Detak terdeteksi</div><div class="v" id="dtN">2.265</div></div><div class="tile"><div class="k">HR rata-rata</div><div class="v">76 <small>bpm</small></div></div><div class="tile"><div class="k">Sensitivitas</div><div class="v">100%</div></div><div class="tile"><div class="k">Presisi</div><div class="v">100%</div></div><div class="tile"><div class="k">SDNN</div><div class="v">52 <small>ms</small></div></div></div>
+                <div class="panel" id="dtMon"><div class="mbar"><span class="chipbtn">❚❚ Jeda</span><span class="chk" id="dtBeep"><i></i>Bunyi bip</span><div class="ro"><span>WAKTU <b id="dtTm">00:00</b></span><span>HR <b class="hr" id="dtHr">76</b></span></div></div><canvas id="cvMon" height="150"></canvas></div>
+                <div class="panel"><div class="ph">Tahapan Pan-Tompkins <span class="row" style="gap:5px"><span class="chipbtn" id="stBp">a · Band-pass</span><span class="chipbtn" id="stD">b · Turunan</span><span class="chipbtn" id="stSq">c · Kuadrat</span><span class="chipbtn" id="stMwi">d–e · Integrasi + ambang</span></span></div><canvas id="cvStage" height="80"></canvas></div>
+              </div>
+              <div class="pg" id="pg-tentang">
+                <span class="ey">Tentang</span>
+                <h2>Dataset, format berkas, dan metode</h2>
+                <div class="panel" id="fmtList"><div class="ph">Format berkas yang bisa diunggah</div><p>WFDB (.hea + .dat/.mat, opsional .atr) · EDF/EDF+ · HL7 aECG (.xml) · MATLAB (.mat) · CSV/TXT satu kolom per sadapan. Semua diubah ke mV dan disampel ulang ke 360 Hz.</p></div>
+                <div class="panel" id="dataTbl"><div class="ph">Data aritmia untuk latihan</div>
+                  <table class="mt"><tr><th>Dataset</th><th>Isi</th><th>Format</th></tr>
+                  <tr><td>MIT-BIH Arrhythmia</td><td>48 rekaman 30 menit, 360 Hz</td><td>WFDB</td></tr>
+                  <tr><td>Long Term AF</td><td>84 rekaman 24 jam, 128 Hz</td><td>WFDB</td></tr>
+                  <tr><td>PTB-XL</td><td>21.837 EKG 12 sadapan, 10 s</td><td>WFDB</td></tr>
+                  <tr><td>Chapman–Shaoxing</td><td>10.646 EKG 12 sadapan, 500 Hz</td><td>CSV</td></tr>
+                  <tr><td>Challenge 2017</td><td>8.528 EKG satu sadapan, 300 Hz</td><td>WFDB (.mat)</td></tr></table></div>
+              </div>
+              <div class="pg" id="pg-unggah">
+                <span class="ey">Unggahan</span>
+                <h2>Analisis rekaman Anda sendiri</h2>
+                <div class="tiles"><div class="tile"><div class="k">Format</div><div class="v" style="font-size:15px">WFDB</div></div><div class="tile"><div class="k">Sadapan</div><div class="v" style="font-size:15px">MLII</div></div><div class="tile"><div class="k">Anotasi</div><div class="v" style="font-size:15px">2.265 detak</div></div></div>
+              </div>
+            </section>
+          </div>
+          <span class="ill">Ilustrasi tampilan</span>
+        </div>
+        <div id="ring"></div>
+        <div id="ripple"></div>
+        <svg id="cursor" viewBox="0 0 22 22" aria-hidden="true"><path d="M3 2 L3 18 L7.5 13.8 L10.6 20 L13.4 18.7 L10.4 12.6 L16.5 12.4 Z" fill="#1b2130" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+    <div class="progress" id="progress"></div>
+    <div class="controls">
+      <button class="btn" id="prev" type="button">◀ Sebelumnya</button>
+      <button class="btn primary" id="play" type="button">▶ Putar</button>
+      <button class="btn" id="next" type="button">Berikutnya ▶</button>
+      <div class="seg" id="speed" aria-label="Kecepatan"><button type="button" data-s="0.75">0,75×</button><button type="button" data-s="1" class="on">1×</button><button type="button" data-s="1.5">1,5×</button></div>
+      <span class="count" id="count"></span>
+    </div>
+    <div class="caption" aria-live="polite"><span class="ch" id="capChap"></span><p id="capText"></p></div>
+    <p class="note">Tampilan di atas adalah tiruan yang disederhanakan dari aplikasi ekg-aritmia.streamlit.app. Angka deteksi rekaman 100 berasal dari pengujian aplikasi; angka filter hanya contoh.</p>
+  </section>
+  <aside><h2>Daftar bab</h2><div id="chapList"></div></aside>
+</main>
+
+<script>
+(() => {
+'use strict';
+const $=s=>document.querySelector(s),FS=360,REDUCED=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- sinyal EKG tiruan ---------- */
+function rng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function g(y,c,a,w){const i0=Math.max(0,Math.floor((c-4*w)*FS)),i1=Math.min(y.length-1,Math.ceil((c+4*w)*FS));for(let i=i0;i<=i1;i++){const d=i/FS-c;y[i]+=a*Math.exp(-d*d/(2*w*w))}}
+function beat(y,t,k){if(k==='V'){g(y,t,1.5,.03);g(y,t+.07,-.7,.035);g(y,t+.34,-.45,.07);return}g(y,t-.17,k==='S'?-.1:.13,.024);g(y,t-.027,-.1,.009);g(y,t,1.15,.0095);g(y,t+.029,-.25,.011);g(y,t+.27,.3,.05)}
+const REC=(()=>{const r=rng(100),dur=40,n=dur*FS,clean=new Float32Array(n),raw=new Float32Array(n),pk=[];let t=.4,iv=.79,k=0;
+  while(t<dur-.5){const lab=(k===9||k===27)?'S':'N';beat(clean,t,lab);pk.push(Math.round(t*FS));const base=.79*(1+.03*Math.sin(t*1.6)+.02*(r()-.5)),nx=(k+1===9||k+1===27)?'S':'N';iv=nx==='S'?base*.66:base;t+=iv;k++}
+  for(let i=0;i<n;i++){const tt=i/FS;raw[i]=clean[i]+.35*Math.sin(2*Math.PI*.21*tt)+.12*Math.sin(2*Math.PI*.07*tt+1)+.04*Math.sin(2*Math.PI*60*tt)+.03*(r()-.5)}
+  return{clean,raw,pk,dur}})();
+
+function fitCv(c){const dpr=Math.min(2,devicePixelRatio||1),w=c.clientWidth||c.width,h=+c.getAttribute('height');c.style.height=h+'px';if(c.width!==Math.round(w*dpr)){c.width=Math.round(w*dpr);c.height=Math.round(h*dpr)}const x=c.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);return{x,w,h}}
+function paper(x,w,h,s){x.fillStyle='#fffdfc';x.fillRect(0,0,w,h);for(let i=0;i*s<=w;i++){x.strokeStyle=i%5?'rgba(214,84,108,.11)':'rgba(214,84,108,.3)';x.beginPath();x.moveTo(Math.round(i*s)+.5,0);x.lineTo(Math.round(i*s)+.5,h);x.stroke()}for(let i=0;i*s<=h;i++){x.strokeStyle=i%5?'rgba(214,84,108,.11)':'rgba(214,84,108,.3)';x.beginPath();x.moveTo(0,Math.round(i*s)+.5);x.lineTo(w,Math.round(i*s)+.5);x.stroke()}}
+function trace(c,y,t0,col,mid,gain){const{x,w,h}=fitCv(c);paper(x,w,h,w/250);x.strokeStyle=col;x.lineWidth=1.3;x.beginPath();const i0=Math.floor(t0*FS),i1=Math.min(y.length-1,Math.floor((t0+10)*FS));for(let i=i0;i<=i1;i++){const px=(i/FS-t0)/10*w,py=h*mid-y[i]*gain;i===i0?x.moveTo(px,py):x.lineTo(px,py)}x.stroke()}
+function drawBeat(){const c=$('#cvBeat'),y=new Float32Array(Math.round(1.7*FS));beat(y,.42,'N');beat(y,1.22,'N');const{x,w,h}=fitCv(c);paper(x,w,h,w/(1.7*25));x.strokeStyle='#1b2130';x.lineWidth=1.8;x.beginPath();for(let i=0;i<y.length;i++){const px=i/FS/1.7*w,py=h*.68-y[i]*100;i?x.lineTo(px,py):x.moveTo(px,py)}x.stroke();x.font='700 13px system-ui';x.textAlign='center';[[.25,.25,'P'],[.42,1.3,'R'],[.69,.45,'T'],[1.22,1.3,'R']].forEach(([t,v,s])=>{x.fillStyle=s==='R'?'#b3243f':'#1b2130';x.fillText(s,t/1.7*w,h*.68-v*100)})}
+function drawPsd(){const c=$('#cvPsd'),{x,w,h}=fitCv(c);x.fillStyle='#fffdfc';x.fillRect(0,0,w,h);x.fillStyle='rgba(179,36,63,.07)';x.fillRect(.005*w,0,.395*w,h);
+  const cur=(fn,col,lw)=>{x.strokeStyle=col;x.lineWidth=lw;x.beginPath();for(let i=0;i<=w;i++){const v=fn(i/w*100);i?x.lineTo(i,v):x.moveTo(i,v)}x.stroke()};
+  const b=f=>h*.12+h*.5*Math.log10(1+f/3)/1.6-(f<1?h*.08:0)-(Math.abs(f-60)<1.2?h*.25:0);
+  const a=f=>{let v=b(f);if(f<.5)v+=h*.45;if(f>40)v+=Math.min(h*.5,(f-40)*h*.02);if(S.filter==='bpn'&&Math.abs(f-60)<2)v+=h*.35;return Math.min(h-2,v)};cur(b,'#9aa1b2',1.2);cur(a,'#b3243f',1.6)}
+function drawStage(){const c=$('#cvStage'),{x,w,h}=fitCv(c);x.fillStyle='#fffdfc';x.fillRect(0,0,w,h);const f=S.stage;x.strokeStyle=f==='mwi'?'#b3243f':'#1b2130';x.lineWidth=1.2;x.beginPath();
+  for(let i=0;i<=w;i++){const t=S.start%28+i/w*10;let v=0;for(const p of REC.pk){const d=t-p/FS;if(Math.abs(d)<.12)v+=f==='bp'?Math.sin(d*90)*Math.exp(-d*d/.0006):f==='d'?Math.cos(d*90)*Math.exp(-d*d/.0005):f==='sq'?Math.exp(-d*d/.0002):Math.exp(-d*d/.0016)}
+    const py=f==='sq'||f==='mwi'?h-6-v*(h-14):h/2-v*(h/2-6);i?x.lineTo(i,py):x.moveTo(i,py)}x.stroke();
+  if(f==='mwi'){x.setLineDash([5,4]);x.strokeStyle='#4b5366';x.beginPath();x.moveTo(0,h-6-.42*(h-14));x.lineTo(w,h-6-.42*(h-14));x.stroke();x.setLineDash([])}}
+const mon={t:0,last:performance.now()};
+function drawMon(){const c=$('#cvMon');if(!c.offsetParent)return;const{x,w,h}=fitCv(c),win=8,mm=w/(win*25),mid=h*.62,Y=v=>mid-v*mm*4.2;paper(x,w,h,mm);
+  const T=mon.t%(REC.dur-1),cyc=Math.floor(T/win),head=T-cyc*win,gap=.2;
+  const seg=(a,b,t0,al)=>{x.globalAlpha=al;x.strokeStyle='#1b2130';x.lineWidth=1.6;x.beginPath();let f=true;for(let i=Math.floor((t0+a)*FS);i<=Math.min(REC.clean.length-1,Math.floor((t0+b)*FS));i+=2){const px=(i/FS-t0)/win*w;f?x.moveTo(px,Y(REC.clean[i])):x.lineTo(px,Y(REC.clean[i]));f=false}x.stroke();
+    REC.pk.forEach(p=>{const ts=p/FS;if(ts<t0+a||ts>t0+b)return;x.fillStyle='#b3243f';x.beginPath();x.arc((ts-t0)/win*w,Y(REC.clean[p]),3.2,0,7);x.fill()});x.globalAlpha=1};
+  if(cyc>0&&head+gap<win)seg(head+gap,win,(cyc-1)*win,.5);seg(0,head,cyc*win,1);x.fillStyle='rgba(255,253,252,.92)';x.fillRect(head/win*w+4,0,gap/win*w,h);
+  let k=-1;while(k+1<REC.pk.length&&REC.pk[k+1]/FS<=T)k++;if(k>=1)$('#dtHr').textContent=Math.round(60*FS/(REC.pk[k]-REC.pk[k-1]));
+  const abs=S.start+T;$('#dtTm').textContent=String(Math.floor(abs/60)).padStart(2,'0')+':'+String(Math.floor(abs%60)).padStart(2,'0')}
+function frame(now){const dt=Math.min(.1,(now-mon.last)/1000);mon.last=now;mon.t=REDUCED?6.5:mon.t+dt;if(S.page==='deteksi'||S.page==='unggah')drawMon();if(!REDUCED)requestAnimationFrame(frame)}
+
+/* ---------- keadaan layar tiruan ---------- */
+const INIT={app:false,typed:'',page:'beranda',src:'syn',rec:'SIN-02',open:false,start:0,filter:'bp',beep:false,stage:'bp',uploaded:false};
+let S={...INIT};
+function render(){
+  $('#blank').hidden=S.app;$('#app').hidden=!S.app;$('#urlText').textContent=S.app?'ekg-aritmia.streamlit.app':S.typed;$('#caret').hidden=S.app;
+  document.querySelectorAll('.nav a').forEach(a=>a.classList.toggle('on',a.dataset.p===S.page||(S.page==='unggah'&&a.dataset.p==='deteksi')));
+  document.querySelectorAll('.pg').forEach(p=>p.classList.toggle('on',p.id==='pg-'+(S.page==='unggah'?'deteksi':S.page)));
+  $('#sbRec').hidden=!['analisis','deteksi','unggah'].includes(S.page);
+  ['Mit','Syn','Up'].forEach(k=>$('#src'+k).classList.toggle('on',S.src===k.toLowerCase()));
+  $('#recBox').hidden=S.src==='up';$('#upBox').hidden=S.src!=='up';
+  $('#recLab').textContent=S.src==='mit'?'Nomor rekaman':'Contoh';$('#recVal').textContent=S.src==='mit'?'100':'SIN-02 · PVC sering';$('#opts').hidden=!S.open;
+  $('#files').hidden=!S.uploaded;$('#leadBox').hidden=!S.uploaded;
+  $('#recCap').textContent=S.src==='up'?(S.uploaded?'WFDB, sadapan MLII, 360 Hz, 1800 s. Dengan anotasi detak. Anotasi .atr dimuat: 2.273 detak.':'Unggah berkas untuk mulai. Untuk WFDB, pilih .hea dan .dat (serta .atr) sekaligus.'):S.src==='mit'?'MIT-BIH rekaman 100, kanal MLII, 360 Hz, 30 menit. Dengan anotasi detak.':'Sinyal sintetis meniru MIT-BIH (360 Hz, mV).';
+  const f=Math.min(1,S.start/1790);$('#knob').style.left=f*100+'%';$('#sfill').style.width=f*100+'%';$('#sval').textContent=S.start.toFixed(1).replace('.',',');
+  ['Bp','Bpn','Med'].forEach(k=>$('#f'+k).classList.toggle('on',S.filter===k.toLowerCase()));$('#fNotch').classList.toggle('on',S.filter==='bpn');
+  $('#t2').innerHTML=(S.filter==='bpn'?'−41,6':'−22,4')+' <small>dB</small>';
+  $('#dtBeep').classList.toggle('on',S.beep);
+  [['Bp','bp'],['D','d'],['Sq','sq'],['Mwi','mwi']].forEach(([k,v])=>$('#st'+k).classList.toggle('on',S.stage===v));
+  if(S.page==='beranda')drawBeat();
+  if(S.page==='analisis'){trace($('#cvRaw'),REC.raw,S.start%28,'#9aa1b2',.62,34);trace($('#cvClean'),REC.clean,S.start%28,'#1b2130',.66,36);drawPsd()}
+  if(S.page==='deteksi'||S.page==='unggah')drawStage();
+}
+
+/* ---------- langkah ---------- */
+const CH=['Membuka aplikasi','Memilih rekaman','Analisis Sinyal','Deteksi R','Unggah berkas sendiri','Data latihan','Berbagi'];
+const SUB=['Link online atau laptop sendiri','Sumber, nomor rekaman, jendela waktu','Filter, notch 50/60 Hz, spektrum','Monitor berjalan, Se/PPV, tahapan','WFDB, EDF, HL7 aECG, MAT, CSV','Format dan dataset di halaman Tentang','Link dan Wi-Fi'];
+const nav=p=>({type:'click',target:'#nv-'+p,act:s=>{s.page=p}});
+const STEPS=[
+ {c:0,type:'type',target:'#url',text:'ekg-aritmia.streamlit.app',act:s=>{s.typed='ekg-aritmia.streamlit.app'},cap:'Buka browser di HP atau laptop, lalu ketik ekg-aritmia.streamlit.app. Tidak perlu login. Di laptop sendiri, klik dua kali Jalankan Aplikasi.bat; alamatnya localhost:8501.'},
+ {c:0,type:'look',target:'#pipe',pre:s=>{s.app=true;s.page='beranda'},cap:'Beranda menjelaskan alur pengolahan: sinyal, praproses, deteksi R, detak jantung, dan tampilan web. Menu di kiri hanya berisi empat halaman.'},
+ {c:1,...nav('analisis'),cap:'Klik Analisis Sinyal. Bagian Rekaman muncul di panel kiri.'},
+ {c:1,type:'click',target:'#srcMit',act:s=>{s.src='mit'},cap:'Pilih sumber rekaman. MIT-BIH berisi 44 rekaman asli 30 menit beranotasi dokter, diunduh dari PhysioNet saat dipilih.'},
+ {c:1,type:'click',target:'#recSel',act:s=>{s.open=true},cap:'Buka daftar nomor rekaman.'},
+ {c:1,type:'click',target:'#opt100',act:s=>{s.rec='100';s.open=false},cap:'Pilih rekaman 100. Keterangan di bawahnya menyebut kanal MLII, 360 Hz, 30 menit, dengan anotasi detak.'},
+ {c:1,type:'drag',target:'#knob',to:.33,act:s=>{s.start=600},cap:'Atur Lebar jendela (5 sampai 30 detik) dan geser Mulai untuk berpindah ke bagian lain rekaman.'},
+ {c:2,type:'look',target:'#anRaw',cap:'Grafik atas adalah sinyal mentah. Garis dasarnya naik-turun karena baseline wander dari napas dan gerakan.'},
+ {c:2,type:'look',target:'#anClean',cap:'Grafik bawah adalah hasil band-pass Butterworth 0,5–40 Hz yang disaring dua arah: garis dasar rata, puncak R tetap tajam.'},
+ {c:2,type:'click',target:'#fBpn',act:s=>{s.filter='bpn'},cap:'Pilih Band-pass + notch untuk menekan derau jala-jala listrik secara khusus. Angka penurunan derau jala-jala ikut berubah.'},
+ {c:2,type:'look',target:'#notchCap',cap:'Keterangan di bawah pengaturan menjelaskan pilihan notch: 50 Hz untuk Indonesia, Asia, Eropa, Afrika, Australia; 60 Hz untuk AS, Kanada, Brasil, Korea Selatan, dan lainnya. MIT-BIH memakai 60 Hz.'},
+ {c:2,type:'look',target:'#anPsd',cap:'Spektrum Welch: garis merah (sesudah) turun jauh di bawah garis abu-abu (sebelum) di luar pita 0,5–40 Hz, termasuk puncak 60 Hz.'},
+ {c:3,...nav('deteksi'),cap:'Buka Deteksi R untuk melihat hasil algoritma Pan-Tompkins.'},
+ {c:3,type:'look',target:'#dtStats',cap:'Pada 30 menit pertama rekaman 100, 2.265 detak ditemukan tanpa ada yang terlewat atau salah deteksi (sensitivitas dan presisi 100%).'},
+ {c:3,type:'look',target:'#dtMon',cap:'Monitor berjalan menyapu sinyal pada 25 mm/s dan 10 mm/mV, 8 detik per sapuan. Titik merah menandai puncak R, dan HR dihitung dari dua detak terakhir.'},
+ {c:3,type:'click',target:'#dtBeep',act:s=>{s.beep=true},cap:'Centang Bunyi bip untuk mendengar bunyi di setiap detak. Kecepatan bisa diatur 0,5×, 1×, atau 2×.'},
+ {c:3,type:'click',target:'#stMwi',act:s=>{s.stage='mwi'},cap:'Pilih tahap Pan-Tompkins. Tahap integrasi 150 ms menampilkan ambang adaptif sebagai garis putus-putus.'},
+ {c:4,type:'click',target:'#srcUp',act:s=>{s.src='up';s.uploaded=false;s.page='unggah'},cap:'Untuk rekaman sendiri, pilih Unggah berkas. Format yang didukung: WFDB, EDF/EDF+, HL7 aECG, MATLAB, dan CSV/TXT.'},
+ {c:4,type:'click',target:'#upl',act:s=>{s.uploaded=true},cap:'Untuk WFDB, pilih .hea, .dat, dan .atr sekaligus. Dengan .atr, sensitivitas dan presisi deteksi ikut dihitung. Berkas maksimal 50 MB.'},
+ {c:4,type:'look',target:'#leadSel',cap:'Bila rekaman punya beberapa sadapan, pilih di Sadapan. II atau MLII dipilih otomatis karena paling mirip MIT-BIH.'},
+ {c:4,type:'look',target:'#recCap',cap:'Keterangan menjelaskan hasil pembacaan: format, sadapan, frekuensi sampling, dan anotasi. Sinyal diubah ke mV, disampel ulang ke 360 Hz, dan dipotong ke 30 menit pertama bila lebih panjang.'},
+ {c:5,...nav('tentang'),act:s=>{s.page='tentang'},cap:'Buka Tentang untuk daftar format berkas, metode, dan rujukan.'},
+ {c:5,type:'look',target:'#dataTbl',cap:'Tabel data latihan berisi dataset aritmia gratis yang bisa langsung diunggah, misalnya MIT-BIH, Long Term AF, PTB-XL, Chapman–Shaoxing (CSV 500 Hz), dan PhysioNet Challenge.'},
+ {c:6,type:'look',target:'#url',cap:'Bagikan link ekg-aritmia.streamlit.app ke dosen atau kelompok. Untuk perangkat di Wi-Fi yang sama, pakai alamat Network URL dari jendela hitam.'}
+];
+
+/* ---------- pemutar ---------- */
+const stage=$('#stage'),wrap=$('#stageWrap'),cursor=$('#cursor'),ring=$('#ring'),ripple=$('#ripple');
+let scale=1,cur=0,playing=false,speed=1,token=0;
+function fit(){scale=wrap.clientWidth/1000;stage.style.transform='scale('+scale+')';wrap.style.height=620*scale+'px';render()}
+new ResizeObserver(fit).observe(wrap);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function rectOf(sel){const el=$(sel);if(!el||(!el.offsetParent&&el.id!=='url'))return null;const a=el.getBoundingClientRect(),b=stage.getBoundingClientRect();return{x:(a.left-b.left)/scale,y:(a.top-b.top)/scale,w:a.width/scale,h:a.height/scale}}
+function setCursor(x,y,ms){cursor.style.transitionDuration=(REDUCED?0:ms)+'ms';cursor.style.transform='translate('+(x-3)+'px,'+(y-2)+'px)'}
+function showRing(r){if(!r){ring.classList.remove('on');return}Object.assign(ring.style,{left:r.x-6+'px',top:r.y-6+'px',width:r.w+12+'px',height:r.h+12+'px'});ring.classList.add('on')}
+function click(x,y){ripple.style.left=x+'px';ripple.style.top=y+'px';ripple.classList.remove('go');void ripple.offsetWidth;ripple.classList.add('go')}
+function stateAt(k){const s={...INIT};for(let i=0;i<k;i++){STEPS[i].pre&&STEPS[i].pre(s);STEPS[i].act&&STEPS[i].act(s)}return s}
+function ui(){const st=STEPS[cur];$('#capChap').textContent='Bab '+(st.c+1)+' · '+CH[st.c];$('#capText').textContent=st.cap;$('#count').textContent='Langkah '+(cur+1)+' dari '+STEPS.length;
+  $('#play').textContent=playing?'❚❚ Jeda':(cur===STEPS.length-1?'↺ Ulangi':'▶ Putar');
+  document.querySelectorAll('.chap').forEach((b,i)=>{b.classList.toggle('on',i===st.c);b.classList.toggle('done',i<st.c)});
+  document.querySelectorAll('#progress button').forEach((b,i)=>{const idx=STEPS.map((s,j)=>s.c===i?j:-1).filter(j=>j>=0),f=idx[0],l=idx[idx.length-1];b.firstChild.style.width=cur>l?'100%':cur<f?'0%':((cur-f+1)/idx.length*100)+'%'})}
+async function run(k){
+  const my=++token;cur=Math.max(0,Math.min(STEPS.length-1,k));const st=STEPS[cur];
+  S=stateAt(cur);st.pre&&st.pre(S);render();ui();showRing(null);
+  await sleep(REDUCED?0:250);if(my!==token)return;
+  const r=rectOf(st.target);
+  if(r){const tx=r.x+Math.min(r.w*.5,r.w-8),ty=r.y+r.h*.55;
+    if(st.type!=='look'){setCursor(tx,ty,900/speed);await sleep(REDUCED?0:950/speed);if(my!==token)return}
+    if(st.type==='click'){click(tx,ty);await sleep(120);st.act&&st.act(S);render()}
+    else if(st.type==='type'){click(tx,ty);for(const ch of st.text){if(my!==token)return;S.typed+=ch;render();await sleep(REDUCED?0:70/speed)}st.act&&st.act(S);render()}
+    else if(st.type==='drag'){click(tx,ty);const tr=rectOf('#slider');for(let i=1;i<=24;i++){if(my!==token)return;const f=i/24*st.to;S.start=Math.round(f*1790);render();setCursor(tr.x+f*tr.w,ty,40);await sleep(REDUCED?0:40/speed)}st.act&&st.act(S);render()}
+    else{st.act&&st.act(S);render()}
+    showRing(rectOf(st.target));
+  }else{st.act&&st.act(S);render()}
+  ui();if(!playing)return;
+  await sleep((3300+st.cap.length*28)/speed);if(my!==token||!playing)return;
+  if(cur<STEPS.length-1)run(cur+1);else{playing=false;ui()}
+}
+$('#play').onclick=()=>{if(playing){playing=false;token++;ui();return}playing=true;if(cur===STEPS.length-1)cur=0;run(cur)};
+$('#next').onclick=()=>run(cur+1);$('#prev').onclick=()=>run(cur-1);
+$('#speed').onclick=e=>{const b=e.target.closest('button');if(!b)return;speed=+b.dataset.s;document.querySelectorAll('#speed button').forEach(x=>x.classList.toggle('on',x===b))};
+$('#chapList').innerHTML=CH.map((c,i)=>'<button class="chap" type="button" data-c="'+i+'"><span class="n">'+String(i+1).padStart(2,'0')+'</span><span><b>'+c+'</b><small>'+SUB[i]+'</small></span></button>').join('');
+$('#chapList').onclick=e=>{const b=e.target.closest('.chap');if(b)run(STEPS.findIndex(s=>s.c===+b.dataset.c))};
+$('#progress').innerHTML=CH.map((c,i)=>'<button type="button" aria-label="Bab '+(i+1)+': '+c+'" data-c="'+i+'"><span></span></button>').join('');
+$('#progress').onclick=e=>{const b=e.target.closest('button');if(b)run(STEPS.findIndex(s=>s.c===+b.dataset.c))};
+document.addEventListener('keydown',e=>{if(e.key==='ArrowRight')run(cur+1);else if(e.key==='ArrowLeft')run(cur-1);else if(e.key===' '&&e.target===document.body){e.preventDefault();$('#play').click()}});
+fit();setCursor(820,520,0);
+S=stateAt(1);STEPS[1].pre(S);render();cur=1;ui();
+requestAnimationFrame(frame);
+if(!REDUCED)setTimeout(()=>{playing=true;run(0)},1800);
+})();
+</script>
+</body>
+</html>

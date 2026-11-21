@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kuis Aplikasi EKG Aritmia</title>
+<style>
+/* Satu kolom yang mudah dibaca di HP; pilihan A/B/C besar; tanpa pustaka luar agar cepat di perangkat apa pun */
+:root{--bg:#fbf7f6;--card:#fff;--ink:#1b2130;--ink2:#4b5366;--line:#e3d4d7;--accent:#b3243f;--accent-ink:#fff;--soft:#f6e6e9;--ok:#1f7a4d;--ok-soft:#e3f3ea;--bad:#b3261e;--bad-soft:#fbe6e4}
+@media (prefers-color-scheme:dark){:root{--bg:#11151d;--card:#191f2a;--ink:#eeeaec;--ink2:#b9b5bf;--line:#2d3444;--accent:#ff7d93;--accent-ink:#1b0b10;--soft:#3a2129;--ok:#6fd39f;--ok-soft:#173326;--bad:#ff8a80;--bad-soft:#3b1d1b;color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.wrap{max-width:780px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+header{padding-block:22px 6px}
+.back{color:var(--accent);text-decoration:none;font-size:.95rem}
+h1{font-size:clamp(1.6rem,5vw,2.1rem);line-height:1.15;margin:8px 0}
+.intro{color:var(--ink2);margin:0}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.tabs button,.modes button{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:8px 16px;cursor:pointer;min-height:44px;font-weight:600}
+.tabs button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.modes{display:flex;gap:6px;flex-wrap:wrap}
+.modes button{font-weight:500}
+.modes button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.bar{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.bar .wrap{padding-block:10px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.score{display:flex;gap:14px;font-weight:600;font-variant-numeric:tabular-nums}
+.score .ok{color:var(--ok)}.score .bad{color:var(--bad)}.score .rest{color:var(--ink2);font-weight:500}
+.prog{flex:1 1 140px;height:8px;border-radius:4px;background:var(--line);overflow:hidden;min-width:100px}
+.prog span{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+.btn{font:inherit;font-size:.95rem;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:9px 15px;cursor:pointer;min-height:44px;text-decoration:none;display:inline-flex;align-items:center}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+main{padding-block:16px 60px;display:flex;flex-direction:column;gap:16px}
+.panel{border:1px solid var(--line);background:var(--card);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.panel h2{margin:0;font-size:1.25rem}
+.panel h3{margin:4px 0 0;font-size:1.05rem}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label,.field .lb{font-weight:600}
+input[type=text],select,textarea{font:inherit;border:2px solid var(--line);background:var(--bg);color:var(--ink);border-radius:10px;padding:10px 12px;min-height:48px;width:100%}
+textarea{min-height:150px;font-size:.9rem}
+input[type=text]:focus,select:focus,textarea:focus{border-color:var(--accent);outline:none}
+.hint{font-size:.88rem;color:var(--ink2);margin:0}
+.err{color:var(--bad);font-size:.9rem;margin:0}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+fieldset.q{border:1px solid var(--line);background:var(--card);border-radius:14px;padding:16px;margin:0;min-width:0}
+fieldset.q legend{padding:0;float:left;width:100%;margin-bottom:10px}
+.meta{display:flex;gap:10px;align-items:center;font-size:.8rem;color:var(--ink2);margin-bottom:4px}
+.meta .num{font-weight:700;color:var(--accent)}
+.meta .tag{border:1px solid var(--line);border-radius:999px;padding:1px 9px}
+.qt{font-weight:600;font-size:1.05rem;display:block}
+.opts{clear:both;display:flex;flex-direction:column;gap:8px}
+.opt{display:flex;gap:12px;align-items:flex-start;border:2px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer;min-height:48px}
+.opt:hover{border-color:var(--accent)}
+.opt input{position:absolute;opacity:0;pointer-events:none}
+.opt .l{flex:none;width:30px;height:30px;border-radius:50%;border:2px solid var(--ink2);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem}
+.opt input:checked + .l{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.opt input:focus-visible + .l{outline:3px solid var(--accent);outline-offset:2px}
+.opt.right{border-color:var(--ok);background:var(--ok-soft)}.opt.right .l{background:var(--ok);border-color:var(--ok);color:var(--card)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}.opt.wrong .l{background:var(--bad);border-color:var(--bad);color:var(--card)}
+.locked .opt{cursor:default}
+.fb{margin-top:10px;padding:10px 12px;border-radius:10px;font-size:.95rem}
+.fb.ok{background:var(--ok-soft)}.fb.bad{background:var(--bad-soft)}
+.fb b{display:block;margin-bottom:2px}.fb.ok b{color:var(--ok)}.fb.bad b{color:var(--bad)}
+.confirm{background:var(--soft);border:1px solid var(--accent);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+.tile{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg);min-width:0}
+.tile .k{font-size:.78rem;color:var(--ink2)}
+.tile .v{font-size:1.5rem;font-weight:700;font-variant-numeric:tabular-nums}
+.up{color:var(--ok)}.down{color:var(--bad)}
+.big{font-size:3rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.badge{display:inline-block;border-radius:999px;padding:3px 12px;font-weight:700;font-size:.9rem}
+.lv4,.lv3{background:var(--ok-soft);color:var(--ok)}.lv2{background:var(--soft);color:var(--accent)}.lv1{background:var(--bad-soft);color:var(--bad)}
+.tbar{display:grid;grid-template-columns:minmax(110px,180px) 1fr 52px;gap:10px;align-items:center;font-size:.92rem}
+.tbar .tk{height:12px;border-radius:6px;background:var(--line);overflow:hidden}
+.tbar .tk span{display:block;height:100%;background:var(--accent)}.tbar .tk span.g{background:var(--ok)}.tbar .tk span.r{background:var(--bad)}
+.tbar b{text-align:right;font-variant-numeric:tabular-nums}
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:.78rem;color:var(--ink2);font-weight:600}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.code{font:14px/1.5 ui-monospace,Consolas,monospace;background:var(--bg);border:1px dashed var(--accent);border-radius:10px;padding:10px 12px;word-break:break-word;user-select:all}
+.wrongs{display:flex;flex-direction:column;gap:10px}
+.wrongs .w{border-left:4px solid var(--bad);background:var(--bad-soft);border-radius:8px;padding:10px 12px;font-size:.95rem}
+.wrongs .w b{display:block}.wrongs .w .c{color:var(--ok);font-weight:600}
+.chart svg{display:block;width:100%;height:auto}
+footer{color:var(--ink2);font-size:.85rem;padding-block:0 30px}
+@media (prefers-reduced-motion:reduce){.prog span{transition:none}}
+</style>
+</head>
+<body>
+<header class="wrap">
+  <a class="back" href="index.html">← Belajar Aplikasi EKG Aritmia</a>
+  <h1>Kuis Aplikasi EKG Aritmia</h1>
+  <p class="intro">Soal pilihan A, B, atau C tentang semua fitur aplikasi <a href="https://ekg-aritmia.streamlit.app" target="_blank" rel="noopener" style="color:var(--accent)">ekg-aritmia.streamlit.app</a>. Tulis nama, kerjakan, lalu lihat nilai dan penjelasannya. Kuis boleh diulang berkali-kali.</p>
+  <nav class="tabs" aria-label="Bagian">
+    <button type="button" data-v="mulai" aria-pressed="true">Kuis</button>
+    <button type="button" data-v="riwayat" aria-pressed="false">Riwayat</button>
+    <button type="button" data-v="rekap" aria-pressed="false">Rekap pengajar</button>
+  </nav>
+</header>
+<div class="bar" id="bar" hidden>
+  <div class="wrap">
+    <div class="score" aria-live="polite"><span class="ok" id="sOk"></span><span class="bad" id="sBad"></span><span class="rest" id="sRest"></span></div>
+    <div class="prog" aria-hidden="true"><span id="progFill"></span></div>
+    <button class="btn primary" type="button" id="finishTop">Selesai</button>
+  </div>
+</div>
+<main class="wrap" id="view"></main>
+<footer class="wrap">Nilai disimpan di browser perangkat ini. Untuk melaporkan nilai ke pengajar, kirim kode hasil yang muncul setelah kuis selesai. Kuis untuk pembelajaran, bukan alat diagnosis medis.</footer>
+
+<script>
+(() => {
+'use strict';
+/* t = topik, q = pertanyaan, o = [jawaban benar, pengecoh, pengecoh], e = penjelasan */
+const Q = [
+// Umum
+{t:'Umum',q:'Apa yang dilakukan aplikasi ini?',o:['Menyaring sinyal EKG, menemukan setiap detak dengan Pan-Tompkins, lalu menghitung HR dan variabilitasnya','Mendiagnosis penyakit jantung secara resmi','Merekam EKG langsung dari alat yang dicolok ke laptop'],e:'Aplikasi memproses rekaman EKG yang sudah ada: filter digital, deteksi puncak R, HR, SDNN, dan RMSSD.'},
+{t:'Umum',q:'Berapa jumlah halaman di menu aplikasi sekarang?',o:['4 halaman: Beranda, Analisis Sinyal, Deteksi R, Tentang','6 halaman termasuk Klasifikasi dan Evaluasi Model','2 halaman: Beranda dan Tentang'],e:'Halaman Klasifikasi dan Evaluasi Model sudah dihapus. Aplikasi kini fokus pada pengolahan sinyal dan deteksi R.'},
+{t:'Umum',q:'Bolehkah hasil aplikasi dipakai untuk keputusan klinis?',o:['Tidak, aplikasi hanya untuk pembelajaran','Boleh bila sensitivitasnya di atas 99%','Boleh bila dosen menyetujui'],e:'Setiap halaman menampilkan peringatan "Untuk pembelajaran, bukan alat diagnosis medis".'},
+{t:'Umum',q:'Halaman mana yang menjawab RM 1 tentang perancangan filter?',o:['Analisis Sinyal','Deteksi R','Tentang'],e:'RM 1 (filter) dijawab di Analisis Sinyal, RM 2 (akurasi Pan-Tompkins) di Deteksi R.'},
+{t:'Umum',q:'Halaman mana yang menjawab RM 2 tentang akurasi Pan-Tompkins?',o:['Deteksi R','Analisis Sinyal','Beranda'],e:'Deteksi R menampilkan sensitivitas dan presisi detektor terhadap anotasi dokter.'},
+{t:'Umum',q:'Di halaman mana daftar format berkas dan data latihan dijelaskan?',o:['Tentang','Beranda','Deteksi R'],e:'Halaman Tentang memuat dataset bawaan, format berkas, metode, tabel data latihan, dan rujukan.'},
+{t:'Umum',q:'Gambar "Satu siklus detak" di Beranda menampilkan label apa?',o:['P, Q, R, S, T dan interval RR 0,80 s (HR 75 bpm)','Kelas N, S, dan V','Spektrum frekuensi'],e:'P = depolarisasi atrium, QRS = depolarisasi ventrikel, T = repolarisasi ventrikel.'},
+// Membuka aplikasi
+{t:'Membuka aplikasi',q:'Apa alamat aplikasi online?',o:['ekg-aritmia.streamlit.app','ekg-aritmia.streamlit.io','localhost:8501.com'],e:'Alamatnya berakhiran .app dan bisa dibuka tanpa login dari perangkat apa pun.'},
+{t:'Membuka aplikasi',q:'Link online menampilkan bahwa aplikasi sedang tidur. Apa yang dilakukan?',o:['Klik tombol untuk membangunkannya lalu tunggu sekitar 1 menit','Unggah ulang semua berkas ke GitHub','Buat akun Streamlit'],e:'Aplikasi gratis di Streamlit Cloud tertidur bila lama tidak dibuka.'},
+{t:'Membuka aplikasi',q:'Bagaimana menjalankan aplikasi di laptop sendiri?',o:['Klik dua kali Jalankan Aplikasi.bat di folder Proyek EKG Aritmia','Klik dua kali Siapkan Unggahan GitHub.bat','Buka app.py di Notepad'],e:'Browser lalu membuka localhost:8501 sekitar 5 detik kemudian.'},
+{t:'Membuka aplikasi',q:'Browser menampilkan "Connection error" saat memakai aplikasi di laptop. Penyebab paling mungkin?',o:['Jendela hitam aplikasi sudah ditutup','Rekaman yang dipilih rusak','Internet sedang lambat'],e:'Jendela hitam adalah servernya. Jalankan lagi Jalankan Aplikasi.bat lalu muat ulang tab.'},
+{t:'Membuka aplikasi',q:'Bagaimana membuka aplikasi dari HP di Wi-Fi yang sama dengan laptop?',o:['Ketik alamat Network URL yang tertulis di jendela hitam','Ketik localhost:8501 di HP','Tidak bisa sama sekali'],e:'Network URL berisi alamat IP laptop. Izinkan Python di Windows Firewall bila ditanya.'},
+{t:'Membuka aplikasi',q:'Di HP, panel kiri tidak terlihat. Bagaimana membukanya?',o:['Ketuk tanda › di pojok kiri atas','Putar HP','Panel kiri tidak ada di HP'],e:'Pada layar sempit panel kiri terlipat.'},
+// Rekaman
+{t:'Memilih rekaman',q:'Apa saja tiga sumber rekaman di panel kiri?',o:['MIT-BIH (PhysioNet), Contoh sintetis, Unggah berkas','MIT-BIH, PTB-XL, Kamera HP','Contoh sintetis, Rekam langsung, Unggah gambar'],e:'Pilihan sumber berlaku untuk halaman Analisis Sinyal dan Deteksi R.'},
+{t:'Memilih rekaman',q:'Berapa rekaman MIT-BIH yang bisa dipilih langsung?',o:['44 rekaman','48 rekaman','10 rekaman'],e:'MIT-BIH punya 48 rekaman; 4 rekaman alat pacu (102, 104, 107, 217) tidak disertakan.'},
+{t:'Memilih rekaman',q:'Mengapa memuat rekaman MIT-BIH pertama kali butuh beberapa detik?',o:['Aplikasi mengunduhnya dari PhysioNet','Aplikasi melatih model','Aplikasi menunggu persetujuan dokter'],e:'Setelah diunduh, rekaman yang sama dimuat jauh lebih cepat.'},
+{t:'Memilih rekaman',q:'Kanal (sadapan) MIT-BIH yang dipakai adalah...',o:['MLII (modified lead II)','V1','aVR'],e:'Sadapan II paling umum untuk rekaman ambulatori.'},
+{t:'Memilih rekaman',q:'Berapa panjang setiap contoh sintetis?',o:['60 detik','30 menit','10 detik'],e:'Ada enam contoh, SIN-01 sampai SIN-06.'},
+{t:'Memilih rekaman',q:'Contoh sintetis mana yang berisi derau berat dan jala-jala 50 Hz?',o:['SIN-04','SIN-01','SIN-06'],e:'SIN-04 cocok untuk mencoba filter notch 50 Hz.'},
+{t:'Memilih rekaman',q:'Sumber mana yang punya sinyal bersih acuan sehingga SNR bisa dihitung?',o:['Contoh sintetis','MIT-BIH','Unggah berkas'],e:'Sinyal sintetis dibuat dari sinyal bersih yang diketahui lalu diberi derau.'},
+{t:'Memilih rekaman',q:'Pilihan lebar jendela waktu yang tersedia adalah...',o:['5, 10, 20, atau 30 detik','1, 2, atau 3 menit','Seluruh rekaman sekaligus'],e:'Rekaman 30 menit berisi lebih dari 600 ribu titik, jadi hanya sebagian yang digambar agar cepat.'},
+{t:'Memilih rekaman',q:'Apa fungsi penggeser "Mulai (detik)"?',o:['Menentukan bagian rekaman yang ditampilkan dan titik awal monitor berjalan','Mengatur kecepatan monitor','Memilih format berkas'],e:'Geser untuk berpindah ke bagian lain rekaman.'},
+// Unggah berkas
+{t:'Unggah berkas',q:'Format berkas EKG apa saja yang bisa diunggah sekarang?',o:['WFDB, EDF/EDF+, HL7 aECG (XML), MATLAB (.mat), dan CSV/TXT','Hanya CSV satu kolom','Hanya gambar foto kertas EKG'],e:'Pilih sumber "Unggah berkas" lalu lihat bagian "Format yang didukung".'},
+{t:'Unggah berkas',q:'Berkas apa saja yang diunggah untuk format WFDB?',o:['.hea bersama .dat (atau .mat), ditambah .atr bila ada anotasi','Hanya .dat','Hanya .atr'],e:'.hea berisi keterangan rekaman, .dat berisi sinyal, .atr berisi anotasi detak.'},
+{t:'Unggah berkas',q:'Bagaimana cara mengunggah tiga berkas WFDB?',o:['Pilih .hea, .dat, dan .atr sekaligus di jendela unggah','Unggah satu per satu ke tiga tempat berbeda','Gabungkan dulu menjadi satu berkas .zip'],e:'Pengunggah menerima banyak berkas sekaligus.'},
+{t:'Unggah berkas',q:'Apa keuntungan menyertakan berkas .atr?',o:['Sensitivitas dan presisi deteksi R dihitung terhadap anotasi','Sinyal jadi lebih bersih','Frekuensi sampling naik'],e:'Tanpa anotasi, puncak R dan HR tetap muncul tetapi tidak bisa dibandingkan dengan acuan.'},
+{t:'Unggah berkas',q:'Muncul pesan "Berkas data 100.dat yang disebut di 100.hea belum diunggah". Artinya?',o:['Hanya .hea yang diunggah; unggah juga berkas .dat-nya','Berkas .hea rusak','Format WFDB tidak didukung'],e:'.hea hanya keterangan; sinyalnya ada di berkas .dat.'},
+{t:'Unggah berkas',q:'Muncul pesan "Berkas WFDB perlu berkas .hea". Apa yang terjadi?',o:['Berkas .dat atau .atr diunggah tanpa .hea','Berkas terlalu besar','Frekuensi sampling salah'],e:'Unggah .hea dan .dat secara bersamaan.'},
+{t:'Unggah berkas',q:'EDF adalah singkatan dari...',o:['European Data Format','Electro Digital File','ECG Data File'],e:'EDF/EDF+ banyak dipakai alat Holter dan polisomnografi.'},
+{t:'Unggah berkas',q:'Untuk berkas EDF, dari mana frekuensi sampling dan satuan dibaca?',o:['Dari header berkas EDF','Dari isian frekuensi sampling di panel kiri','Dari nama berkas'],e:'Header EDF menyimpan jumlah sampel per rekaman data dan satuan tiap kanal.'},
+{t:'Unggah berkas',q:'HL7 aECG adalah...',o:['Format XML untuk EKG beranotasi yang dipakai FDA','Format gambar EKG','Format audio detak jantung'],e:'Unggah satu berkas .xml.'},
+{t:'Unggah berkas',q:'Untuk berkas .mat tanpa .hea, apa yang perlu diisi manual?',o:['Frekuensi sampling','Nama pasien','Sadapan'],e:'Berkas .mat polos tidak menyimpan frekuensi sampling.'},
+{t:'Unggah berkas',q:'Bagaimana aturan CSV/TXT sekarang?',o:['Satu kolom per sadapan, boleh dengan baris judul','Harus tepat satu kolom tanpa judul','Satu baris per sadapan'],e:'Contoh: CSV Chapman berisi 12 kolom untuk 12 sadapan.'},
+{t:'Unggah berkas',q:'CSV berisi kolom "time" dalam detik. Apa yang dilakukan aplikasi?',o:['Kolom waktu dilewati dan frekuensi sampling dihitung dari kolom itu','Kolom waktu digambar sebagai sinyal','Berkas ditolak'],e:'Misalnya selisih waktu 0,002 s berarti 500 Hz.'},
+{t:'Unggah berkas',q:'Rekaman berisi beberapa sadapan. Apa yang muncul di panel kiri?',o:['Pilihan "Sadapan"; II atau MLII dipilih otomatis','Semua sadapan dijumlahkan','Hanya sadapan pertama yang bisa dipakai'],e:'Sadapan II paling mirip dengan MIT-BIH.'},
+{t:'Unggah berkas',q:'Semua sinyal unggahan diubah ke satuan apa?',o:['Milivolt (mV)','Volt (V)','Mikrovolt (µV)'],e:'Satuan di header (uV, mV, V) dibaca dan dikonversi.'},
+{t:'Unggah berkas',q:'Nilai CSV tanpa satuan memiliki puncak 1200. Apa yang dilakukan aplikasi?',o:['Menganggapnya µV dan membaginya dengan 1000 menjadi mV','Menolak berkas','Membiarkannya sebagai mV'],e:'EKG normal hanya beberapa mV, jadi puncak lebih dari 20 dianggap µV.'},
+{t:'Unggah berkas',q:'Semua sinyal unggahan disampel ulang ke frekuensi berapa?',o:['360 Hz','250 Hz','1000 Hz'],e:'360 Hz adalah frekuensi MIT-BIH, sehingga semua rekaman diproses dengan cara yang sama.'},
+{t:'Unggah berkas',q:'Berapa panjang rekaman yang dianalisis?',o:['10 detik sampai 30 menit; yang lebih panjang dipotong ke 30 menit pertama','Bebas, berapa pun panjangnya','Maksimal 1 menit'],e:'Rekaman 24 jam tetap bisa diunggah, tetapi hanya 30 menit pertama yang dianalisis.'},
+{t:'Unggah berkas',q:'Berapa ukuran maksimal tiap berkas unggahan?',o:['50 MB','5 MB','1 GB'],e:'Batas ini diatur di pengaturan Streamlit.'},
+{t:'Unggah berkas',q:'Format mana yang belum didukung?',o:['SCP-ECG dan DICOM-ECG','EDF','WFDB'],e:'Ubah dulu ke EDF atau WFDB.'},
+{t:'Unggah berkas',q:'Muncul pesan "Baris 5 berisi 2 kolom, padahal baris pertama 3 kolom". Apa yang salah?',o:['Jumlah kolom tiap baris tidak sama','Frekuensi sampling terlalu rendah','Berkas terlalu pendek'],e:'Pastikan setiap baris punya jumlah kolom yang sama.'},
+{t:'Unggah berkas',q:'Apakah angka dengan koma desimal seperti 0,123 diterima di CSV satu kolom?',o:['Ya','Tidak','Hanya di berkas TXT'],e:'Koma desimal ala Excel Indonesia dikenali.'},
+// Analisis Sinyal
+{t:'Analisis Sinyal',q:'Filter standar yang dipakai untuk deteksi R adalah...',o:['Band-pass Butterworth 0,5–40 Hz, orde 4','Low-pass 100 Hz, orde 2','Notch 50 Hz saja'],e:'Rentang ini mempertahankan P, QRS, dan T sambil menekan baseline wander dan derau.'},
+{t:'Analisis Sinyal',q:'Mengapa filter diterapkan dua arah (sosfiltfilt)?',o:['Agar fase tidak bergeser dan bentuk QRS terjaga','Agar lebih cepat','Agar derau bertambah'],e:'Penyaringan maju lalu mundur menghapus pergeseran fase filter IIR.'},
+{t:'Analisis Sinyal',q:'Batas bawah 0,5 Hz terutama membuang...',o:['Baseline wander akibat napas dan gerakan','Derau otot','Jala-jala listrik'],e:'Baseline wander adalah goyangan lambat garis dasar.'},
+{t:'Analisis Sinyal',q:'Tiga konfigurasi filter yang bisa dipilih adalah...',o:['Band-pass Butterworth, Band-pass + notch, Filter median + low-pass','FFT, DWT, PCA','Low-pass, high-pass, all-pass'],e:'Tabel di bawah grafik membandingkan ketiganya pada rekaman yang sama.'},
+{t:'Analisis Sinyal',q:'Bagaimana filter median membuang baseline?',o:['Memperkirakan baseline dengan median 200 ms lalu 600 ms, menguranginya, lalu low-pass','Membuang semua frekuensi di bawah 40 Hz','Mengganti sinyal dengan rata-ratanya'],e:'Ini pembanding filter band-pass untuk RM 1.'},
+{t:'Analisis Sinyal',q:'Pilihan orde filter yang tersedia adalah...',o:['2, 4, atau 6','1 sampai 10','Hanya 4'],e:'Orde lebih tinggi membuat batas pita lolos lebih tajam.'},
+{t:'Analisis Sinyal',q:'Angka "Baseline < 0,5 Hz: −20 dB" berarti daya derau baseline turun...',o:['100 kali','20 kali','2 kali'],e:'Setiap 10 dB = 10 kali, jadi 20 dB = 100 kali.'},
+{t:'Analisis Sinyal',q:'"Kemiripan QRS" 0,999 berarti...',o:['Bentuk QRS hampir tidak berubah oleh filter','Filter gagal','99,9% detak terdeteksi'],e:'Korelasi bentuk QRS hasil filter dengan acuan bersih, maksimum 1.'},
+{t:'Analisis Sinyal',q:'Pada spektrum Welch, garis abu-abu dan merah adalah...',o:['Sebelum dan sesudah penyaringan','Sesudah dan sebelum','Sinyal dan derau'],e:'Di luar pita merah muda, garis merah seharusnya turun jauh di bawah abu-abu.'},
+{t:'Analisis Sinyal',q:'Apakah pengaturan filter di Analisis Sinyal mengubah hasil Deteksi R?',o:['Tidak, Deteksi R selalu memakai filter standar','Ya, semua halaman ikut','Hanya bila memilih notch'],e:'Filter standar membuat hasil deteksi konsisten.'},
+// Notch dan derau
+{t:'Notch dan derau',q:'Notch 50 Hz dipakai untuk rekaman dari wilayah mana?',o:['Indonesia, sebagian besar Asia, Eropa, Afrika, Australia','Amerika Serikat dan Kanada','Hanya Jepang barat'],e:'Frekuensi notch mengikuti jaringan listrik setempat.'},
+{t:'Notch dan derau',q:'Notch 60 Hz dipakai untuk rekaman dari wilayah mana?',o:['Amerika Serikat, Kanada, Brasil, Korea Selatan, Taiwan, Filipina, Arab Saudi','Indonesia dan Malaysia','Eropa'],e:'MIT-BIH direkam di AS sehingga derau jala-jalanya 60 Hz.'},
+{t:'Notch dan derau',q:'Jepang memakai frekuensi listrik...',o:['Keduanya: timur 50 Hz, barat 60 Hz','Hanya 50 Hz','Hanya 60 Hz'],e:'Jepang terbagi dua wilayah jaringan listrik.'},
+{t:'Notch dan derau',q:'Rekaman EKG yang Anda ambil sendiri di Indonesia sebaiknya memakai notch...',o:['50 Hz','60 Hz','40 Hz'],e:'Jaringan listrik Indonesia berfrekuensi 50 Hz.'},
+{t:'Notch dan derau',q:'Mengapa notch bersifat opsional pada band-pass 0,5–40 Hz?',o:['Batas atas 40 Hz sudah menekan 50 dan 60 Hz','Notch merusak QRS','Notch hanya untuk sinyal sintetis'],e:'Notch berguna bila derau jala-jala sangat kuat, misalnya pada SIN-04.'},
+{t:'Notch dan derau',q:'Derau otot (EMG) terutama berada di frekuensi...',o:['Tinggi, pita lebar','Di bawah 0,5 Hz','Tepat 50 Hz'],e:'Batas atas 40 Hz menekan sebagian besar derau otot.'},
+// Deteksi R
+{t:'Deteksi R',q:'Algoritma deteksi puncak R yang dipakai adalah...',o:['Pan-Tompkins (1985) yang ditulis sendiri','FFT','Random Forest'],e:'Pan-Tompkins adalah inti pengolahan sinyal digital proyek ini.'},
+{t:'Deteksi R',q:'Urutan tahapan Pan-Tompkins yang benar adalah...',o:['Band-pass 5–15 Hz → turunan → kuadrat → integrasi 150 ms → ambang adaptif','Kuadrat → band-pass → ambang → turunan','Integrasi → turunan → band-pass → kuadrat'],e:'Tiap tahap bisa dilihat di bagian Tahapan Pan-Tompkins.'},
+{t:'Deteksi R',q:'Bila interval RR = 0,8 detik, berapa HR?',o:['75 bpm','80 bpm','48 bpm'],e:'HR = 60 / RR = 60 / 0,8 = 75.'},
+{t:'Deteksi R',q:'Sebuah deteksi dianggap benar bila jaraknya ke anotasi paling jauh...',o:['150 ms','15 ms','1 detik'],e:'Toleransi ini mengikuti kebiasaan evaluasi detektor QRS.'},
+{t:'Deteksi R',q:'Sensitivitas deteksi mengukur...',o:['Persentase detak beranotasi yang berhasil ditemukan','Persentase deteksi yang benar','Kecepatan detektor'],e:'Sensitivitas = TP / (TP + FN).'},
+{t:'Deteksi R',q:'Presisi (PPV) deteksi mengukur...',o:['Persentase deteksi yang memang detak sungguhan','Persentase detak yang terlewat','Jumlah detak per menit'],e:'Presisi = TP / (TP + FP).'},
+{t:'Deteksi R',q:'Pada grafik puncak R, lingkaran oranye menandai...',o:['Detak beranotasi yang terlewat (FN)','Deteksi palsu (FP)','Detak normal'],e:'Tanda x oranye menandai deteksi palsu (FP).'},
+{t:'Deteksi R',q:'Periode refrakter detektor adalah...',o:['200 ms','20 ms','2 detik'],e:'Mencegah satu detak terhitung dua kali.'},
+{t:'Deteksi R',q:'Garis putus-putus pada tahap integrasi adalah...',o:['Ambang adaptif NPKI + 0,25 (SPKI − NPKI)','Rata-rata HR','Batas 40 Hz'],e:'Ambang mengikuti tingkat sinyal dan derau.'},
+{t:'Deteksi R',q:'SDNN mengukur...',o:['Simpangan baku interval RR (variabilitas detak)','Jumlah detak','Lebar QRS'],e:'RMSSD juga mengukur variabilitas, dari selisih RR berturutan.'},
+{t:'Deteksi R',q:'RMSSD melonjak tinggi biasanya karena...',o:['Banyak detak prematur sehingga RR berturutan sangat berbeda','Filter terlalu kuat','Rekaman terlalu pendek'],e:'Detak prematur membuat RR pendek lalu panjang bergantian.'},
+{t:'Deteksi R',q:'Pada grafik interval RR, detak prematur tampak sebagai...',o:['Titik yang turun tajam lalu diikuti titik yang naik','Garis datar','Titik yang hilang'],e:'Detak datang lebih awal (RR pendek) lalu diikuti jeda (RR panjang).'},
+// Monitor berjalan
+{t:'Monitor berjalan',q:'Skala kertas monitor berjalan adalah...',o:['25 mm/s dan 10 mm/mV','50 mm/s dan 5 mm/mV','10 mm/s dan 25 mm/mV'],e:'Ini skala standar kertas EKG.'},
+{t:'Monitor berjalan',q:'Berapa detik dalam satu sapuan monitor?',o:['8 detik','2 detik','30 detik'],e:'Sapuan baru menimpa yang lama dari kiri ke kanan.'},
+{t:'Monitor berjalan',q:'Berapa lama monitor memutar rekaman sebelum mengulang?',o:['2 menit dari posisi Mulai','Seluruh rekaman','10 detik'],e:'Geser Mulai di panel kiri untuk menonton bagian lain.'},
+{t:'Monitor berjalan',q:'Mengapa bunyi bip tidak langsung terdengar?',o:['Browser hanya mengizinkan suara setelah kotak Bunyi bip diklik','Bunyi hanya di laptop','Bunyi hanya untuk detak prematur'],e:'Centang Bunyi bip dan pastikan volume menyala.'},
+{t:'Monitor berjalan',q:'Pilihan kecepatan monitor adalah...',o:['0,5×, 1×, dan 2×','1× saja','5× dan 10×'],e:'Tombol Jeda/Putar menghentikan atau melanjutkan sapuan.'},
+{t:'Monitor berjalan',q:'Angka HR di monitor dihitung dari...',o:['Dua detak terakhir yang sudah tergambar','Rata-rata seluruh rekaman','Usia pasien'],e:'Karena itu angkanya berubah-ubah mengikuti irama.'},
+// Data latihan
+{t:'Data latihan',q:'Dataset mana yang berisi 21.837 EKG 12 sadapan berdurasi 10 detik?',o:['PTB-XL','MIT-BIH Arrhythmia','Challenge 2017'],e:'PTB-XL (Wagner dkk., 2020) tersedia dalam format WFDB 100 dan 500 Hz.'},
+{t:'Data latihan',q:'Dataset Chapman–Shaoxing tersedia dalam format...',o:['CSV 12 kolom, 500 Hz','WFDB 360 Hz','EDF'],e:'Unggah CSV-nya dan isi frekuensi sampling 500 Hz.'},
+{t:'Data latihan',q:'Dataset mana yang cocok untuk belajar fibrilasi atrium dalam rekaman sangat panjang?',o:['Long Term AF Database (24–25 jam)','PTB-XL','Contoh sintetis SIN-01'],e:'Karena 24 jam, hanya 30 menit pertama yang dianalisis aplikasi.'},
+{t:'Data latihan',q:'PhysioNet Challenge 2017 berisi...',o:['EKG satu sadapan 9–60 detik, 300 Hz, AF vs normal','EKG 12 sadapan 30 menit','Rekaman Holter 24 jam'],e:'Formatnya WFDB dengan .hea dan .mat.'},
+{t:'Data latihan',q:'Di mana kebanyakan dataset latihan bisa diunduh gratis?',o:['PhysioNet (physionet.org)','Google Play','YouTube'],e:'Chapman–Shaoxing diunduh dari figshare.'},
+{t:'Data latihan',q:'MIT-BIH Arrhythmia direkam pada frekuensi sampling...',o:['360 Hz','500 Hz','128 Hz'],e:'Setiap rekaman sekitar 30 menit dengan dua kanal.'},
+// Pembaruan
+{t:'Pembaruan aplikasi',q:'Bagaimana memperbarui aplikasi online setelah kode berubah?',o:['Jalankan Siapkan Unggahan GitHub.bat, unggah berkas ke repositori, lalu Commit changes','Kirim berkas lewat email','Buat aplikasi baru setiap kali'],e:'Streamlit Cloud memasang ulang otomatis dalam sekitar 1 menit.'},
+{t:'Pembaruan aplikasi',q:'Setelah app.py diubah, apa yang perlu dilakukan di Streamlit Cloud?',o:['Manage app, lalu Reboot app','Tidak perlu apa-apa','Membuat repositori baru'],e:'Perubahan menu baru terpasang setelah server dinyalakan ulang.'},
+{t:'Pembaruan aplikasi',q:'Di GitHub, berkas diunggah lewat tombol...',o:['Add file → Upload files di halaman repositori','New project di halaman Projects','Edit profile'],e:'Halaman Projects bukan tempat berkas aplikasi.'},
+{t:'Pembaruan aplikasi',q:'Bagaimana menghapus berkas di GitHub?',o:['Buka berkasnya, klik ⋯ di kanan atas, pilih Delete file, lalu Commit changes','Seret berkas ke Recycle Bin','Ganti namanya menjadi kosong'],e:'Setiap perubahan di GitHub diakhiri dengan Commit changes.'},
+// Istilah
+{t:'Istilah',q:'Gelombang P menggambarkan...',o:['Depolarisasi atrium','Depolarisasi ventrikel','Repolarisasi ventrikel'],e:'QRS = depolarisasi ventrikel, T = repolarisasi ventrikel.'},
+{t:'Istilah',q:'Interval RR adalah...',o:['Jarak antara dua puncak R berturutan','Lebar QRS','Jarak P ke T'],e:'HR = 60 / RR.'},
+{t:'Istilah',q:'Irama sinus normal memiliki detak sekitar...',o:['60 sampai 100 kali per menit','20 sampai 40 kali per menit','150 sampai 200 kali per menit'],e:'Di bawah 60 bradikardia, di atas 100 takikardia.'},
+{t:'Istilah',q:'Ciri fibrilasi atrium pada grafik RR adalah...',o:['Interval RR sangat tidak teratur','Interval RR selalu sama','Tidak ada puncak R'],e:'Gelombang P juga tidak jelas pada fibrilasi atrium.'},
+{t:'Istilah',q:'Teorema Nyquist menyatakan frekuensi sampling minimal...',o:['Dua kali frekuensi tertinggi sinyal','Sama dengan frekuensi tertinggi','Setengah frekuensi tertinggi'],e:'360 Hz jauh di atas dua kali 40 Hz.'},
+{t:'Istilah',q:'WFDB adalah...',o:['Format dan pustaka rekaman fisiologis dari PhysioNet','Nama filter','Nama algoritma deteksi'],e:'WFDB = WaveForm DataBase.'},
+{t:'Istilah',q:'Band-pass adalah filter yang...',o:['Meloloskan frekuensi di antara dua batas','Hanya meloloskan frekuensi rendah','Memotong satu frekuensi sempit'],e:'Yang memotong satu frekuensi sempit adalah notch.'},
+{t:'Istilah',q:'1 mV sama dengan...',o:['1000 µV','100 µV','0,001 µV'],e:'Karena itu nilai dalam µV dibagi 1000 menjadi mV.'}
+];
+
+function rng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+Q.forEach((x,i)=>{const r=rng(i*977+31),ord=[0,1,2];for(let k=2;k>0;k--){const j=Math.floor(r()*(k+1));[ord[k],ord[j]]=[ord[j],ord[k]]}x.id=i;x.opts=ord.map(k=>x.o[k]);x.ans=ord.indexOf(0)});
+const L=['A','B','C'],TOPICS=[...new Set(Q.map(x=>x.t))];
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const K_HIST='ekg-kuis-riwayat-v3',K_NAME='ekg-kuis-nama',K_REKAP='ekg-kuis-rekap-v3';
+const get=(k,d)=>{try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}};
+const set=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+
+const S={view:'mulai',name:get(K_NAME,''),topic:'all',mode:'prac',nameErr:'',order:[],pick:{},confirm:false,startedAt:0,inProgress:false,last:null,prev:null,hist:get(K_HIST,[]),rekap:get(K_REKAP,''),histName:null,copied:''};
+
+const level=p=>p>=85?[4,'Sangat paham']:p>=70?[3,'Paham']:p>=50?[2,'Cukup paham']:[1,'Belum paham'];
+const badge=p=>{const[l,t]=level(p);return '<span class="badge lv'+l+'">'+t+'</span>'};
+const tLabel=t=>t==='all'?'Semua topik':t;
+const pad=n=>String(n).padStart(2,'0');
+const stamp=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+' '+pad(d.getHours())+':'+pad(d.getMinutes());
+const diffTxt=d=>d==null?'–':(d>0?'+':'')+d;
+const diffCls=d=>d>0?'up':d<0?'down':'';
+function code(a){return 'EKG-KUIS | Nama: '+a.nama+' | '+a.waktu+' | Topik: '+tLabel(a.topik)+' | Benar '+a.benar+'/'+a.total+' | Nilai '+a.skor+' | Percobaan ke-'+a.ke}
+
+/* ---------- tampilan ---------- */
+function render(){
+  document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-pressed',String(({kuis:'mulai',hasil:'mulai'}[S.view]||S.view)===b.dataset.v)));
+  $('#bar').hidden=S.view!=='kuis';
+  $('#view').innerHTML={mulai:vMulai,kuis:vKuis,hasil:vHasil,riwayat:vRiwayat,rekap:vRekap}[S.view]();
+  if(S.view==='kuis')score();
+}
+function vMulai(){
+  const mine=S.hist.filter(a=>a.nama.toLowerCase()===S.name.trim().toLowerCase()),last=mine[mine.length-1];
+  return '<section class="panel"><h2>Mulai kuis</h2>'+
+  '<div class="field"><label for="nama">Nama Anda</label><input type="text" id="nama" maxlength="60" autocomplete="name" value="'+esc(S.name)+'" placeholder="Contoh: Widy Puspaningrum">'+(S.nameErr?'<p class="err" role="alert">'+esc(S.nameErr)+'</p>':'')+'</div>'+
+  '<div class="field"><label for="topic">Topik</label><select id="topic"><option value="all">Semua topik ('+Q.length+' soal)</option>'+TOPICS.map(t=>'<option value="'+esc(t)+'"'+(S.topic===t?' selected':'')+'>'+esc(t)+' ('+Q.filter(x=>x.t===t).length+' soal)</option>').join('')+'</select></div>'+
+  '<div class="field"><span class="lb">Cara menjawab</span><div class="modes" role="group" aria-label="Mode"><button type="button" data-m="prac" aria-pressed="'+(S.mode==='prac')+'">Latihan: penjelasan langsung muncul</button><button type="button" data-m="exam" aria-pressed="'+(S.mode==='exam')+'">Ujian: penjelasan di akhir</button></div></div>'+
+  '<div class="row"><button class="btn primary" type="button" id="start">Mulai kuis</button></div>'+
+  (last?'<p class="hint">Percobaan terakhir '+esc(last.nama)+': nilai <b>'+last.skor+'</b> ('+esc(tLabel(last.topik))+', '+last.waktu+'). Total '+mine.length+' percobaan di perangkat ini.</p>':'<p class="hint">Nilai setiap percobaan tersimpan di tab Riwayat pada perangkat ini.</p>')+'</section>';
+}
+function vKuis(){
+  const show=S.mode==='prac',items=S.order.map(i=>Q[i]);
+  let h='<p class="hint">Peserta: <b>'+esc(S.name)+'</b> · '+esc(tLabel(S.topic))+' · '+(show?'mode latihan':'mode ujian')+'</p>';
+  items.forEach((x,n)=>{
+    const p=S.pick[x.id],lock=p!=null&&show;
+    h+='<fieldset class="q'+(lock?' locked':'')+'" id="q'+x.id+'"><legend><span class="meta"><span class="num">Soal '+(n+1)+' dari '+items.length+'</span><span class="tag">'+esc(x.t)+'</span></span><span class="qt">'+esc(x.q)+'</span></legend><div class="opts">';
+    x.opts.forEach((o,k)=>{let c='opt';if(lock){if(k===x.ans)c+=' right';else if(k===p)c+=' wrong'}
+      h+='<label class="'+c+'"><input type="radio" name="r'+x.id+'" value="'+k+'"'+(p===k?' checked':'')+(lock?' disabled':'')+'><span class="l">'+L[k]+'</span><span>'+esc(o)+(lock&&k===x.ans?' ✓':lock&&k===p?' ✗':'')+'</span></label>'});
+    h+='</div>';
+    if(lock){const ok=p===x.ans;h+='<div class="fb '+(ok?'ok':'bad')+'"><b>'+(ok?'Benar.':'Kurang tepat. Jawaban yang benar: '+L[x.ans]+'. '+esc(x.opts[x.ans]))+'</b>'+esc(x.e)+'</div>'}
+    h+='</fieldset>';
+  });
+  const left=items.filter(x=>S.pick[x.id]==null).length;
+  h+=S.confirm&&left?'<div class="confirm" role="alert"><b>Masih ada '+left+' soal yang belum dijawab.</b><span>Soal yang belum dijawab dihitung salah. Tetap selesaikan?</span><div class="row"><button class="btn primary" type="button" id="finishYes">Ya, selesaikan</button><button class="btn" type="button" id="finishNo">Kembali menjawab</button></div></div>'
+    :'<div class="row"><button class="btn primary" type="button" id="finish">Selesai dan lihat nilai</button><button class="btn" type="button" id="cancel">Batal</button></div>';
+  return h;
+}
+function score(){
+  const items=S.order.map(i=>Q[i]),done=items.filter(x=>S.pick[x.id]!=null),ok=done.filter(x=>S.pick[x.id]===x.ans).length;
+  $('#sOk').textContent=S.mode==='prac'?ok+' benar':done.length+' dijawab';
+  $('#sBad').textContent=S.mode==='prac'?(done.length-ok)+' salah':'';
+  $('#sRest').textContent=(items.length-done.length)+' belum';
+  $('#progFill').style.width=(items.length?done.length/items.length*100:0)+'%';
+}
+function bars(per){return Object.keys(per).map(t=>{const[b,n]=per[t],p=Math.round(b/n*100);return '<div class="tbar"><span>'+esc(t)+'</span><span class="tk" aria-hidden="true"><span class="'+(p>=70?'g':p<50?'r':'')+'" style="width:'+p+'%"></span></span><b>'+p+'%</b></div>'}).join('')}
+function vHasil(){
+  const a=S.last,d=S.prev?a.skor-S.prev.skor:null,c=code(a),wrong=a.salah.map(id=>Q[id]);
+  const wa='https://wa.me/?text='+encodeURIComponent(c);
+  return '<section class="panel" aria-live="polite"><h2>Hasil kuis '+esc(a.nama)+'</h2>'+
+  '<div class="row" style="gap:16px"><span class="big">'+a.skor+'</span><div>'+badge(a.skor)+'<p class="hint" style="margin-top:6px">'+a.benar+' benar dari '+a.total+' soal · '+esc(tLabel(a.topik))+' · '+Math.max(1,Math.round(a.durasi/60))+' menit</p></div></div>'+
+  '<div class="tiles"><div class="tile"><div class="k">Percobaan ke-</div><div class="v">'+a.ke+'</div></div><div class="tile"><div class="k">Dibanding sebelumnya</div><div class="v '+diffCls(d)+'">'+diffTxt(d)+'</div></div><div class="tile"><div class="k">Nilai terbaik</div><div class="v">'+Math.max(...S.hist.filter(x=>x.nama.toLowerCase()===a.nama.toLowerCase()).map(x=>x.skor))+'</div></div></div>'+
+  '<p class="hint">'+(d==null?'Ini percobaan pertama untuk '+esc(tLabel(a.topik))+'. Ulangi kuis untuk melihat peningkatan.':'Dibanding percobaan sebelumnya untuk '+esc(tLabel(a.topik))+' (nilai '+S.prev.skor+').')+'</p>'+
+  '<h3>Pemahaman per topik</h3>'+bars(a.perTopik)+
+  '<h3>Kirim hasil ke pengajar</h3><p class="hint">Salin kode ini lalu kirim ke pengajar, atau langsung lewat WhatsApp.</p><div class="code" id="codeTxt">'+esc(c)+'</div>'+
+  '<div class="row"><button class="btn" type="button" id="copyCode">Salin kode</button><a class="btn" href="'+wa+'" target="_blank" rel="noopener">Kirim lewat WhatsApp</a>'+(S.copied?'<span class="hint" role="status">'+esc(S.copied)+'</span>':'')+'</div>'+
+  '<div class="row"><button class="btn primary" type="button" id="again">Ulangi kuis</button><button class="btn" type="button" data-go="riwayat">Lihat riwayat</button><button class="btn" type="button" data-go="mulai">Ganti topik</button></div></section>'+
+  (wrong.length?'<section class="panel"><h2>Soal yang salah ('+wrong.length+')</h2><div class="wrongs">'+wrong.map(x=>{const p=a.jawab[x.id];return '<div class="w"><b>'+esc(x.q)+'</b>'+(p!=null?'Jawaban Anda: '+L[p]+'. '+esc(x.opts[p]):'Tidak dijawab.')+'<br><span class="c">Jawaban benar: '+L[x.ans]+'. '+esc(x.opts[x.ans])+'</span><br>'+esc(x.e)+'</div>'}).join('')+'</div></section>':'<section class="panel"><h2>Semua jawaban benar</h2><p>Anda sudah menguasai topik ini.</p></section>');
+}
+function chart(list){
+  if(list.length<2)return '';
+  const W=640,H=200,P={l:34,r:12,t:12,b:26},pw=W-P.l-P.r,ph=H-P.t-P.b,X=i=>P.l+i/(list.length-1)*pw,Y=v=>P.t+(1-v/100)*ph;
+  let g='';[0,50,70,85,100].forEach(v=>{g+='<line x1="'+P.l+'" x2="'+(W-P.r)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="var(--line)"/><text x="'+(P.l-6)+'" y="'+(Y(v)+4)+'" text-anchor="end" font-size="11" fill="var(--ink2)">'+v+'</text>'});
+  const step=Math.max(1,Math.ceil(list.length/10));let lb='';list.forEach((a,i)=>{if(i%step===0||i===list.length-1)lb+='<text x="'+X(i)+'" y="'+(H-8)+'" text-anchor="middle" font-size="11" fill="var(--ink2)">'+(i+1)+'</text>'});
+  return '<div class="chart"><svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Grafik nilai per percobaan">'+g+'<polyline points="'+list.map((a,i)=>X(i)+','+Y(a.skor)).join(' ')+'" fill="none" stroke="var(--accent)" stroke-width="2.5"/>'+list.map((a,i)=>'<circle cx="'+X(i)+'" cy="'+Y(a.skor)+'" r="'+(i===list.length-1?5:3.5)+'" fill="var(--accent)"><title>Percobaan '+(i+1)+': '+a.skor+'</title></circle>').join('')+lb+'</svg><p class="hint">Sumbu datar: percobaan ke-. Garis 50, 70, 85 = batas Cukup paham, Paham, Sangat paham.</p></div>';
+}
+function stats(list){const f=list[0],l=list[list.length-1],g=l.skor-f.skor;
+  return '<div class="tiles"><div class="tile"><div class="k">Percobaan</div><div class="v">'+list.length+'</div></div><div class="tile"><div class="k">Nilai pertama</div><div class="v">'+f.skor+'</div></div><div class="tile"><div class="k">Nilai terakhir</div><div class="v">'+l.skor+'</div></div><div class="tile"><div class="k">Terbaik</div><div class="v">'+Math.max(...list.map(a=>a.skor))+'</div></div><div class="tile"><div class="k">Peningkatan</div><div class="v '+diffCls(g)+'">'+diffTxt(g)+'</div></div></div>'}
+function vRiwayat(){
+  const names=[...new Set(S.hist.map(a=>a.nama))];
+  if(!names.length)return '<section class="panel"><h2>Riwayat</h2><p>Belum ada percobaan di perangkat ini. Kerjakan kuis; nilainya akan muncul di sini.</p><div class="row"><button class="btn primary" type="button" data-go="mulai">Mulai kuis</button></div></section>';
+  const cur=S.histName&&names.includes(S.histName)?S.histName:(names.find(n=>n.toLowerCase()===S.name.trim().toLowerCase())||names[names.length-1]);
+  const list=S.hist.filter(a=>a.nama===cur),last=list[list.length-1];
+  const per={};list.forEach(a=>Object.assign(per,a.perTopik));
+  const prevSame=i=>{for(let j=i-1;j>=0;j--)if(list[j].topik===list[i].topik)return list[j];return null};
+  return '<section class="panel"><h2>Riwayat</h2>'+(names.length>1?'<div class="field"><label for="histName">Peserta di perangkat ini</label><select id="histName">'+names.map(n=>'<option'+(n===cur?' selected':'')+'>'+esc(n)+'</option>').join('')+'</select></div>':'<p><b>'+esc(cur)+'</b></p>')+
+  stats(list)+'<p>Tingkat pemahaman saat ini: '+badge(last.skor)+'</p>'+chart(list)+'<h3>Pemahaman per topik (nilai terbaru tiap topik)</h3>'+bars(per)+
+  '<div class="tw"><table><thead><tr><th class="n">Ke-</th><th>Waktu</th><th>Topik</th><th class="n">Benar</th><th class="n">Nilai</th><th class="n">Perubahan</th><th>Pemahaman</th></tr></thead><tbody>'+
+  list.map((a,i)=>({a,i,p:prevSame(i)})).reverse().map(({a,i,p})=>{const d=p?a.skor-p.skor:null;return '<tr><td class="n">'+(i+1)+'</td><td>'+a.waktu+'</td><td>'+esc(tLabel(a.topik))+'</td><td class="n">'+a.benar+'/'+a.total+'</td><td class="n"><b>'+a.skor+'</b></td><td class="n '+diffCls(d)+'">'+diffTxt(d)+'</td><td>'+badge(a.skor)+'</td></tr>'}).join('')+
+  '</tbody></table></div><p class="hint">Perubahan dibandingkan dengan percobaan sebelumnya pada topik yang sama. Riwayat hanya tersimpan di browser ini.</p></section>';
+}
+function parseCodes(txt){
+  const re=/EKG-KUIS\s*\|\s*Nama:\s*([^|]+?)\s*\|\s*([0-9-]+ [0-9:]+)\s*\|\s*Topik:\s*([^|]+?)\s*\|\s*Benar\s*(\d+)\/(\d+)\s*\|\s*Nilai\s*(\d+)\s*\|\s*Percobaan ke-(\d+)/g;
+  const seen=new Set(),out=[];let m;
+  while((m=re.exec(txt))){const k=m[0].replace(/\s+/g,' ');if(seen.has(k))continue;seen.add(k);out.push({nama:m[1].trim(),waktu:m[2],topik:m[3].trim(),benar:+m[4],total:+m[5],skor:+m[6],ke:+m[7]})}
+  return out;
+}
+function vRekap(){
+  const rows=parseCodes(S.rekap),by={};
+  rows.forEach(r=>{const k=r.nama.toLowerCase();(by[k]=by[k]||[]).push(r)});
+  const people=Object.values(by).map(l=>l.sort((a,b)=>a.waktu.localeCompare(b.waktu)));
+  let body='';
+  if(people.length){
+    const lastAvg=Math.round(people.reduce((s,l)=>s+l[l.length-1].skor,0)/people.length);
+    body='<div class="tiles"><div class="tile"><div class="k">Peserta</div><div class="v">'+people.length+'</div></div><div class="tile"><div class="k">Total percobaan</div><div class="v">'+rows.length+'</div></div><div class="tile"><div class="k">Rata-rata nilai terakhir</div><div class="v">'+lastAvg+'</div></div></div>'+
+    '<div class="tw"><table><thead><tr><th>Peserta</th><th class="n">Percobaan</th><th class="n">Pertama</th><th class="n">Terakhir</th><th class="n">Terbaik</th><th class="n">Peningkatan</th><th>Pemahaman</th><th>Terakhir mengisi</th></tr></thead><tbody>'+
+    people.sort((a,b)=>b[b.length-1].skor-a[a.length-1].skor).map(l=>{const f=l[0],z=l[l.length-1],g=l.length>1?z.skor-f.skor:null;return '<tr><td><b>'+esc(z.nama)+'</b></td><td class="n">'+l.length+'</td><td class="n">'+f.skor+'</td><td class="n"><b>'+z.skor+'</b></td><td class="n">'+Math.max(...l.map(a=>a.skor))+'</td><td class="n '+diffCls(g)+'">'+diffTxt(g)+'</td><td>'+badge(z.skor)+'</td><td>'+z.waktu+'</td></tr>'}).join('')+'</tbody></table></div>'+
+    '<div class="row"><button class="btn" type="button" id="copyCsv">Salin rekap (CSV untuk Excel)</button>'+(S.copied?'<span class="hint" role="status">'+esc(S.copied)+'</span>':'')+'</div>';
+  } else if(S.rekap.trim()) body='<p class="err">Tidak ada kode hasil yang dikenali. Kode diawali "EKG-KUIS | Nama:".</p>';
+  return '<section class="panel"><h2>Rekap pengajar</h2><p class="hint">Tempel kode hasil yang dikirim peserta (boleh banyak sekaligus, misalnya seluruh pesan dari grup WhatsApp). Aplikasi mengelompokkan per nama dan menghitung peningkatan nilainya. Kode yang sama hanya dihitung sekali.</p>'+
+  '<div class="field"><label for="rekapTxt">Kode hasil peserta</label><textarea id="rekapTxt" placeholder="EKG-KUIS | Nama: ... | 2026-11-21 17:30 | Topik: Semua topik | Benar 70/86 | Nilai 81 | Percobaan ke-1">'+esc(S.rekap)+'</textarea></div>'+
+  '<div class="row"><button class="btn primary" type="button" id="rekapGo">Hitung rekap</button><button class="btn" type="button" id="rekapLocal">Tambahkan riwayat perangkat ini</button><button class="btn" type="button" id="rekapClear">Kosongkan</button></div>'+body+'</section>';
+}
+
+/* ---------- alur ---------- */
+function startQuiz(){
+  const n=($('#nama')?$('#nama').value:S.name).trim();
+  if(!n){S.nameErr='Tulis nama Anda dulu agar nilainya tercatat.';render();$('#nama').focus();return}
+  S.name=n;S.nameErr='';set(K_NAME,n);
+  const ids=Q.filter(x=>S.topic==='all'||x.t===S.topic).map(x=>x.id);
+  for(let i=ids.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[ids[i],ids[j]]=[ids[j],ids[i]]}
+  Object.assign(S,{order:ids,pick:{},confirm:false,startedAt:Date.now(),inProgress:true,view:'kuis',copied:''});render();window.scrollTo(0,0);
+}
+function finish(){
+  const items=S.order.map(i=>Q[i]),per={},salah=[],jawab={};let benar=0;
+  items.forEach(x=>{const p=S.pick[x.id];per[x.t]=per[x.t]||[0,0];per[x.t][1]++;if(p!=null)jawab[x.id]=p;if(p===x.ans){benar++;per[x.t][0]++}else salah.push(x.id)});
+  const mine=S.hist.filter(a=>a.nama.toLowerCase()===S.name.toLowerCase());
+  const a={waktu:stamp(new Date()),nama:S.name,topik:S.topic,mode:S.mode,benar,total:items.length,skor:Math.round(benar/items.length*100),durasi:Math.round((Date.now()-S.startedAt)/1000),perTopik:per,salah,jawab,ke:mine.length+1};
+  S.prev=null;for(let j=mine.length-1;j>=0;j--)if(mine[j].topik===a.topik){S.prev=mine[j];break}
+  S.hist=S.hist.concat(a);set(K_HIST,S.hist.slice(-300));
+  Object.assign(S,{last:a,inProgress:false,view:'hasil',histName:a.nama});render();window.scrollTo(0,0);
+}
+function copy(txt,okMsg){
+  const done=()=>{S.copied=okMsg;render()};
+  const fallback=()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(e){S.copied='Pilih teksnya lalu salin manual.';render()}ta.remove()};
+  try{navigator.clipboard.writeText(txt).then(done,fallback)}catch(e){fallback()}
+}
+
+/* ---------- interaksi ---------- */
+const V=$('#view');
+V.addEventListener('change',e=>{
+  const r=e.target;
+  if(r.id==='topic'){S.topic=r.value;return}
+  if(r.id==='histName'){S.histName=r.value;render();return}
+  if(r.type!=='radio')return;
+  const id=+r.name.slice(1);if(S.pick[id]!=null&&S.mode==='prac')return;
+  S.pick[id]=+r.value;S.confirm=false;
+  if(S.mode==='prac'){const y=window.scrollY;render();window.scrollTo(0,y);const f=document.getElementById('q'+id),fb=f&&f.querySelector('.fb');if(fb)fb.scrollIntoView({block:'nearest'})}else score();
+});
+V.addEventListener('input',e=>{if(e.target.id==='nama')S.name=e.target.value;if(e.target.id==='rekapTxt')S.rekap=e.target.value});
+V.addEventListener('keydown',e=>{if(e.target.id==='nama'&&e.key==='Enter'){e.preventDefault();startQuiz()}});
+V.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.m){S.mode=b.dataset.m;render();return}
+  if(b.dataset.go){S.view=b.dataset.go;S.copied='';render();window.scrollTo(0,0);return}
+  ({start:startQuiz,again:startQuiz,finish:tryFinish,finishYes:finish,
+    finishNo:()=>{S.confirm=false;render()},
+    cancel:()=>{S.inProgress=false;S.view='mulai';render()},
+    copyCode:()=>copy(code(S.last),'Kode disalin.'),
+    rekapGo:()=>{S.rekap=$('#rekapTxt').value;set(K_REKAP,S.rekap);S.copied='';render()},
+    rekapLocal:()=>{S.rekap=($('#rekapTxt').value.trim()+'\n'+S.hist.map(code).join('\n')).trim();set(K_REKAP,S.rekap);render()},
+    rekapClear:()=>{S.rekap='';set(K_REKAP,'');render()},
+    copyCsv:()=>copy(['nama,waktu,topik,benar,total,nilai,percobaan_ke'].concat(parseCodes(S.rekap).map(r=>[JSON.stringify(r.nama),r.waktu,JSON.stringify(r.topik),r.benar,r.total,r.skor,r.ke].join(','))).join('\n'),'Rekap disalin. Tempel ke Excel.')
+  }[b.id]||(()=>{}))();
+});
+function tryFinish(){const left=S.order.filter(i=>S.pick[i]==null).length;if(left){S.confirm=true;render();const c=document.querySelector('.confirm');if(c)c.scrollIntoView({block:'center'});return}finish()}
+$('#finishTop').onclick=tryFinish;
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{S.view=b.dataset.v==='mulai'&&S.inProgress?'kuis':b.dataset.v;S.confirm=false;S.copied='';render();window.scrollTo(0,0)});
+render();
+})();
+</script>
+</body>
+</html>

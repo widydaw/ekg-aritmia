@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Belajar Aplikasi EKG Aritmia</title>
+<meta name="description" content="Tutorial animasi dan kuis untuk aplikasi Analisis Sinyal EKG untuk Deteksi Aritmia.">
+<style>
+:root{--bg:#fbf7f6;--card:#fff;--ink:#1b2130;--ink2:#4b5366;--line:#e3d4d7;--accent:#b3243f;--accent-ink:#fff;--soft:#f6e6e9}
+@media (prefers-color-scheme:dark){:root{--bg:#11151d;--card:#191f2a;--ink:#eeeaec;--ink2:#b9b5bf;--line:#2d3444;--accent:#ff7d93;--accent-ink:#1b0b10;--soft:#3a2129;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.wrap{max-width:820px;margin:0 auto;padding:32px max(16px,env(safe-area-inset-right)) 48px max(16px,env(safe-area-inset-left))}
+.trace{display:block;width:100%;height:70px;margin-bottom:6px}
+h1{font-size:clamp(1.7rem,5vw,2.4rem);line-height:1.15;margin:0 0 10px;letter-spacing:-.01em}
+p.lead{color:var(--ink2);margin:0 0 26px;max-width:62ch}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+a.card{display:flex;flex-direction:column;gap:6px;text-decoration:none;color:var(--ink);background:var(--card);border:2px solid var(--line);border-radius:16px;padding:18px;min-height:150px}
+a.card:hover,a.card:focus-visible{border-color:var(--accent);outline:none}
+a.card b{font-size:1.2rem}
+a.card span{color:var(--ink2);font-size:.95rem}
+a.card em{margin-top:auto;font-style:normal;color:var(--accent);font-weight:700}
+a.card.main{background:var(--soft);border-color:var(--accent)}
+footer{margin-top:28px;color:var(--ink2);font-size:.85rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <svg class="trace" viewBox="0 0 800 70" preserveAspectRatio="none" aria-hidden="true">
+    <polyline fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"
+      points="0,45 90,45 105,40 115,45 140,45 150,50 160,8 170,62 180,45 230,45 250,35 275,45 330,45 345,40 355,45 380,45 390,50 400,8 410,62 420,45 470,45 490,35 515,45 570,45 585,40 595,45 620,45 630,50 640,8 650,62 660,45 710,45 730,35 755,45 800,45"/>
+  </svg>
+  <h1>Belajar Aplikasi EKG Aritmia</h1>
+  <p class="lead">Pelajari cara memakai aplikasi analisis sinyal EKG lewat tutorial animasi, lalu uji pemahaman Anda dengan kuis. Bisa dibuka dari HP atau laptop mana pun, tanpa login.</p>
+  <div class="cards">
+    <a class="card main" href="tutorial.html"><b>Tutorial animasi</b><span>7 bab: membuka aplikasi, memilih rekaman, filter, deteksi R, unggah berkas, data latihan, dan berbagi.</span><em>Tonton →</em></a>
+    <a class="card main" href="kuis.html"><b>Kuis</b><span>Soal pilihan A/B/C dengan penjelasan, nilai akhir, tingkat pemahaman, dan riwayat percobaan.</span><em>Mulai kuis →</em></a>
+    <a class="card" href="https://ekg-aritmia.streamlit.app" target="_blank" rel="noopener"><b>Buka aplikasinya</b><span>ekg-aritmia.streamlit.app. Bila sedang tidur, klik tombol untuk membangunkan dan tunggu sekitar 1 menit.</span><em>Buka →</em></a>
+  </div>
+  <footer>Untuk pembelajaran pengolahan sinyal digital, bukan alat diagnosis medis.</footer>
+</div>
+</body>
+</html>
