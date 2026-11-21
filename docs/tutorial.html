@@ -148,6 +148,7 @@ table.mt td{padding:4px 6px;border-bottom:1px solid #f3eaec}
                 <a data-p="beranda" id="nv-beranda"><i></i>Beranda</a>
                 <a data-p="analisis" id="nv-analisis"><i></i>Analisis Sinyal</a>
                 <a data-p="deteksi" id="nv-deteksi"><i></i>Deteksi R</a>
+                <a data-p="klasifikasi" id="nv-klasifikasi"><i></i>Klasifikasi</a>
                 <a data-p="tentang" id="nv-tentang"><i></i>Tentang</a>
               </nav>
               <div class="sbsec" id="sbRec">
@@ -180,10 +181,10 @@ table.mt td{padding:4px 6px;border-bottom:1px solid #f3eaec}
             </aside>
             <section class="main">
               <div class="pg" id="pg-beranda">
-                <span class="ey">Pengolahan sinyal digital · MIT-BIH · Pan-Tompkins</span>
-                <h2>Analisis Sinyal EKG untuk Deteksi Aritmia</h2>
-                <p>Aplikasi menyaring sinyal EKG, menemukan setiap detak dengan Pan-Tompkins, lalu menghitung detak jantung (HR) dan variabilitasnya.</p>
-                <div class="pipe" id="pipe"><div><b>1 Sinyal</b>MIT-BIH atau berkas Anda</div><div><b>2 Praproses</b>0,5–40 Hz, notch</div><div><b>3 Deteksi R</b>Pan-Tompkins</div><div><b>4 Detak jantung</b>HR, SDNN, RMSSD</div><div><b>5 Web</b>grafik dan monitor</div></div>
+                <span class="ey">Pengolahan sinyal digital · MIT-BIH · Pan-Tompkins · Random Forest</span>
+                <h2>Analisis dan Klasifikasi Sinyal EKG untuk Deteksi Aritmia</h2>
+                <p>Aplikasi menyaring sinyal EKG, menemukan setiap detak dengan Pan-Tompkins, menghitung HR dan variabilitasnya, lalu menggolongkan setiap detak menjadi N, S, atau V.</p>
+                <div class="pipe" id="pipe"><div><b>1 Sinyal</b>MIT-BIH atau berkas Anda</div><div><b>2 Praproses</b>0,5–40 Hz, notch</div><div><b>3 Deteksi R</b>Pan-Tompkins</div><div><b>4 Fitur</b>RR, morfologi, wavelet</div><div><b>5 Klasifikasi</b>N, S, V</div></div>
                 <div class="panel"><div class="ph">Satu siklus detak <span class="sval">RR = 0,80 s → 75 bpm</span></div><canvas id="cvBeat" height="190"></canvas></div>
               </div>
               <div class="pg" id="pg-analisis">
@@ -204,6 +205,18 @@ table.mt td{padding:4px 6px;border-bottom:1px solid #f3eaec}
                 <div class="tiles" id="dtStats"><div class="tile"><div class="k">Detak terdeteksi</div><div class="v" id="dtN">2.265</div></div><div class="tile"><div class="k">HR rata-rata</div><div class="v">76 <small>bpm</small></div></div><div class="tile"><div class="k">Sensitivitas</div><div class="v">100%</div></div><div class="tile"><div class="k">Presisi</div><div class="v">100%</div></div><div class="tile"><div class="k">SDNN</div><div class="v">52 <small>ms</small></div></div></div>
                 <div class="panel" id="dtMon"><div class="mbar"><span class="chipbtn">❚❚ Jeda</span><span class="chk" id="dtBeep"><i></i>Bunyi bip</span><div class="ro"><span>WAKTU <b id="dtTm">00:00</b></span><span>HR <b class="hr" id="dtHr">76</b></span></div></div><canvas id="cvMon" height="150"></canvas></div>
                 <div class="panel"><div class="ph">Tahapan Pan-Tompkins <span class="row" style="gap:5px"><span class="chipbtn" id="stBp">a · Band-pass</span><span class="chipbtn" id="stD">b · Turunan</span><span class="chipbtn" id="stSq">c · Kuadrat</span><span class="chipbtn" id="stMwi">d–e · Integrasi + ambang</span></span></div><canvas id="cvStage" height="80"></canvas></div>
+              </div>
+              <div class="pg" id="pg-klasifikasi">
+                <span class="ey">RM 3 · Klasifikasi detak</span>
+                <h2>Klasifikasi detak N, S, dan V</h2>
+                <div class="panel" id="clModel"><div class="row"><span class="lab">Pengklasifikasi</span><span class="chipbtn" id="mRf">Random Forest</span><span class="chipbtn" id="mSvm">SVM (RBF)</span><span class="chipbtn" id="mKnn">k-NN</span></div></div>
+                <div class="tiles" id="clStats"><div class="tile"><div class="k">Detak diklasifikasi</div><div class="v">2.273</div></div><div class="tile"><div class="k">N · Normal</div><div class="v" style="color:#2b7a76">2.236</div></div><div class="tile"><div class="k">S · Supraventrikular</div><div class="v" style="color:#c17a07">36</div></div><div class="tile"><div class="k">V · Ventrikular</div><div class="v" style="color:#8d2e86">1</div></div></div>
+                <div class="panel" id="clSig"><div class="ph">Sinyal bersih dan kelas tiap detak <span class="sval"><b style="color:#2b7a76">N</b> · <b style="color:#c17a07">S</b> · <b style="color:#8d2e86">V</b></span></div><canvas id="cvCls" height="110"></canvas></div>
+                <div class="panel" id="clCm"><div class="ph">Dibandingkan dengan anotasi dokter</div>
+                  <table class="mt"><tr><th></th><th>Prediksi N</th><th>Prediksi S</th><th>Prediksi V</th></tr>
+                  <tr><th>Anotasi N</th><td><b>2.236</b></td><td>3</td><td>0</td></tr>
+                  <tr><th>Anotasi S</th><td>0</td><td><b>33</b></td><td>0</td></tr>
+                  <tr><th>Anotasi V</th><td>0</td><td>0</td><td><b>1</b></td></tr></table></div>
               </div>
               <div class="pg" id="pg-tentang">
                 <span class="ey">Tentang</span>
@@ -254,10 +267,13 @@ const $=s=>document.querySelector(s),FS=360,REDUCED=matchMedia('(prefers-reduced
 function rng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 function g(y,c,a,w){const i0=Math.max(0,Math.floor((c-4*w)*FS)),i1=Math.min(y.length-1,Math.ceil((c+4*w)*FS));for(let i=i0;i<=i1;i++){const d=i/FS-c;y[i]+=a*Math.exp(-d*d/(2*w*w))}}
 function beat(y,t,k){if(k==='V'){g(y,t,1.5,.03);g(y,t+.07,-.7,.035);g(y,t+.34,-.45,.07);return}g(y,t-.17,k==='S'?-.1:.13,.024);g(y,t-.027,-.1,.009);g(y,t,1.15,.0095);g(y,t+.029,-.25,.011);g(y,t+.27,.3,.05)}
-const REC=(()=>{const r=rng(100),dur=40,n=dur*FS,clean=new Float32Array(n),raw=new Float32Array(n),pk=[];let t=.4,iv=.79,k=0;
-  while(t<dur-.5){const lab=(k===9||k===27)?'S':'N';beat(clean,t,lab);pk.push(Math.round(t*FS));const base=.79*(1+.03*Math.sin(t*1.6)+.02*(r()-.5)),nx=(k+1===9||k+1===27)?'S':'N';iv=nx==='S'?base*.66:base;t+=iv;k++}
+const REC=(()=>{const r=rng(100),dur=40,n=dur*FS,clean=new Float32Array(n),raw=new Float32Array(n),pk=[],lb=[];let t=.4,iv=.79,k=0;
+  while(t<dur-.5){const lab=(k===9||k===27)?'S':'N';beat(clean,t,lab);pk.push(Math.round(t*FS));lb.push(lab);const base=.79*(1+.03*Math.sin(t*1.6)+.02*(r()-.5)),nx=(k+1===9||k+1===27)?'S':'N';iv=nx==='S'?base*.66:base;t+=iv;k++}
   for(let i=0;i<n;i++){const tt=i/FS;raw[i]=clean[i]+.35*Math.sin(2*Math.PI*.21*tt)+.12*Math.sin(2*Math.PI*.07*tt+1)+.04*Math.sin(2*Math.PI*60*tt)+.03*(r()-.5)}
-  return{clean,raw,pk,dur}})();
+  return{clean,raw,pk,lb,dur}})();
+const CLS_COL={N:'#2b7a76',S:'#c17a07',V:'#8d2e86'};
+function drawCls(){const c=$('#cvCls'),t0=3;trace(c,REC.clean,t0,'#1b2130',.7,48);const{x,w,h}=fitCv(c);x.font='700 12px system-ui';x.textAlign='center';
+  REC.pk.forEach((p,i)=>{const ts=p/FS-t0;if(ts<0||ts>10)return;const px=ts/10*w,py=h*.7-REC.clean[p]*48,l=REC.lb[i];x.fillStyle=CLS_COL[l];x.beginPath();x.arc(px,py,3.6,0,7);x.fill();x.fillText(l,px,py-8)})}
 
 function fitCv(c){const dpr=Math.min(2,devicePixelRatio||1),w=c.clientWidth||c.width,h=+c.getAttribute('height');c.style.height=h+'px';if(c.width!==Math.round(w*dpr)){c.width=Math.round(w*dpr);c.height=Math.round(h*dpr)}const x=c.getContext('2d');x.setTransform(dpr,0,0,dpr,0,0);return{x,w,h}}
 function paper(x,w,h,s){x.fillStyle='#fffdfc';x.fillRect(0,0,w,h);for(let i=0;i*s<=w;i++){x.strokeStyle=i%5?'rgba(214,84,108,.11)':'rgba(214,84,108,.3)';x.beginPath();x.moveTo(Math.round(i*s)+.5,0);x.lineTo(Math.round(i*s)+.5,h);x.stroke()}for(let i=0;i*s<=h;i++){x.strokeStyle=i%5?'rgba(214,84,108,.11)':'rgba(214,84,108,.3)';x.beginPath();x.moveTo(0,Math.round(i*s)+.5);x.lineTo(w,Math.round(i*s)+.5);x.stroke()}}
@@ -282,13 +298,14 @@ function drawMon(){const c=$('#cvMon');if(!c.offsetParent)return;const{x,w,h}=fi
 function frame(now){const dt=Math.min(.1,(now-mon.last)/1000);mon.last=now;mon.t=REDUCED?6.5:mon.t+dt;if(S.page==='deteksi'||S.page==='unggah')drawMon();if(!REDUCED)requestAnimationFrame(frame)}
 
 /* ---------- keadaan layar tiruan ---------- */
-const INIT={app:false,typed:'',page:'beranda',src:'syn',rec:'SIN-02',open:false,start:0,filter:'bp',beep:false,stage:'bp',uploaded:false};
+const INIT={app:false,typed:'',page:'beranda',src:'syn',rec:'SIN-02',open:false,start:0,filter:'bp',beep:false,stage:'bp',uploaded:false,model:'rf'};
 let S={...INIT};
 function render(){
   $('#blank').hidden=S.app;$('#app').hidden=!S.app;$('#urlText').textContent=S.app?'ekg-aritmia.streamlit.app':S.typed;$('#caret').hidden=S.app;
   document.querySelectorAll('.nav a').forEach(a=>a.classList.toggle('on',a.dataset.p===S.page||(S.page==='unggah'&&a.dataset.p==='deteksi')));
   document.querySelectorAll('.pg').forEach(p=>p.classList.toggle('on',p.id==='pg-'+(S.page==='unggah'?'deteksi':S.page)));
-  $('#sbRec').hidden=!['analisis','deteksi','unggah'].includes(S.page);
+  $('#sbRec').hidden=!['analisis','deteksi','unggah','klasifikasi'].includes(S.page);
+  [['Rf','rf'],['Svm','svm'],['Knn','knn']].forEach(([k,v])=>$('#m'+k).classList.toggle('on',S.model===v));
   ['Mit','Syn','Up'].forEach(k=>$('#src'+k).classList.toggle('on',S.src===k.toLowerCase()));
   $('#recBox').hidden=S.src==='up';$('#upBox').hidden=S.src!=='up';
   $('#recLab').textContent=S.src==='mit'?'Nomor rekaman':'Contoh';$('#recVal').textContent=S.src==='mit'?'100':'SIN-02 · PVC sering';$('#opts').hidden=!S.open;
@@ -302,15 +319,16 @@ function render(){
   if(S.page==='beranda')drawBeat();
   if(S.page==='analisis'){trace($('#cvRaw'),REC.raw,S.start%28,'#9aa1b2',.62,34);trace($('#cvClean'),REC.clean,S.start%28,'#1b2130',.66,36);drawPsd()}
   if(S.page==='deteksi'||S.page==='unggah')drawStage();
+  if(S.page==='klasifikasi')drawCls();
 }
 
 /* ---------- langkah ---------- */
-const CH=['Membuka aplikasi','Memilih rekaman','Analisis Sinyal','Deteksi R','Unggah berkas sendiri','Data latihan','Berbagi'];
-const SUB=['Link online atau laptop sendiri','Sumber, nomor rekaman, jendela waktu','Filter, notch 50/60 Hz, spektrum','Monitor berjalan, Se/PPV, tahapan','WFDB, EDF, HL7 aECG, MAT, CSV','Format dan dataset di halaman Tentang','Link dan Wi-Fi'];
+const CH=['Membuka aplikasi','Memilih rekaman','Analisis Sinyal','Deteksi R','Klasifikasi','Unggah berkas sendiri','Data latihan','Berbagi'];
+const SUB=['Link online atau laptop sendiri','Sumber, nomor rekaman, jendela waktu','Filter, notch 50/60 Hz, spektrum','Monitor berjalan, Se/PPV, tahapan','Model, kelas N/S/V, anotasi dokter','WFDB, EDF, HL7 aECG, MAT, CSV','Format dan dataset di halaman Tentang','Link dan Wi-Fi'];
 const nav=p=>({type:'click',target:'#nv-'+p,act:s=>{s.page=p}});
 const STEPS=[
  {c:0,type:'type',target:'#url',text:'ekg-aritmia.streamlit.app',act:s=>{s.typed='ekg-aritmia.streamlit.app'},cap:'Buka browser di HP atau laptop, lalu ketik ekg-aritmia.streamlit.app. Tidak perlu login. Di laptop sendiri, klik dua kali Jalankan Aplikasi.bat; alamatnya localhost:8501.'},
- {c:0,type:'look',target:'#pipe',pre:s=>{s.app=true;s.page='beranda'},cap:'Beranda menjelaskan alur pengolahan: sinyal, praproses, deteksi R, detak jantung, dan tampilan web. Menu di kiri hanya berisi empat halaman.'},
+ {c:0,type:'look',target:'#pipe',pre:s=>{s.app=true;s.page='beranda'},cap:'Beranda menjelaskan alur pengolahan: sinyal, praproses, deteksi R, ekstraksi fitur, dan klasifikasi detak. Menu di kiri berisi lima halaman.'},
  {c:1,...nav('analisis'),cap:'Klik Analisis Sinyal. Bagian Rekaman muncul di panel kiri.'},
  {c:1,type:'click',target:'#srcMit',act:s=>{s.src='mit'},cap:'Pilih sumber rekaman. MIT-BIH berisi 44 rekaman asli 30 menit beranotasi dokter, diunduh dari PhysioNet saat dipilih.'},
  {c:1,type:'click',target:'#recSel',act:s=>{s.open=true},cap:'Buka daftar nomor rekaman.'},
@@ -326,13 +344,18 @@ const STEPS=[
  {c:3,type:'look',target:'#dtMon',cap:'Monitor berjalan menyapu sinyal pada 25 mm/s dan 10 mm/mV, 8 detik per sapuan. Titik merah menandai puncak R, dan HR dihitung dari dua detak terakhir.'},
  {c:3,type:'click',target:'#dtBeep',act:s=>{s.beep=true},cap:'Centang Bunyi bip untuk mendengar bunyi di setiap detak. Kecepatan bisa diatur 0,5×, 1×, atau 2×.'},
  {c:3,type:'click',target:'#stMwi',act:s=>{s.stage='mwi'},cap:'Pilih tahap Pan-Tompkins. Tahap integrasi 150 ms menampilkan ambang adaptif sebagai garis putus-putus.'},
- {c:4,type:'click',target:'#srcUp',act:s=>{s.src='up';s.uploaded=false;s.page='unggah'},cap:'Untuk rekaman sendiri, pilih Unggah berkas. Format yang didukung: WFDB, EDF/EDF+, HL7 aECG, MATLAB, dan CSV/TXT.'},
- {c:4,type:'click',target:'#upl',act:s=>{s.uploaded=true},cap:'Untuk WFDB, pilih .hea, .dat, dan .atr sekaligus. Dengan .atr, sensitivitas dan presisi deteksi ikut dihitung. Berkas maksimal 50 MB.'},
- {c:4,type:'look',target:'#leadSel',cap:'Bila rekaman punya beberapa sadapan, pilih di Sadapan. II atau MLII dipilih otomatis karena paling mirip MIT-BIH.'},
- {c:4,type:'look',target:'#recCap',cap:'Keterangan menjelaskan hasil pembacaan: format, sadapan, frekuensi sampling, dan anotasi. Sinyal diubah ke mV, disampel ulang ke 360 Hz, dan dipotong ke 30 menit pertama bila lebih panjang.'},
- {c:5,...nav('tentang'),act:s=>{s.page='tentang'},cap:'Buka Tentang untuk daftar format berkas, metode, dan rujukan.'},
- {c:5,type:'look',target:'#dataTbl',cap:'Tabel data latihan berisi dataset aritmia gratis yang bisa langsung diunggah, misalnya MIT-BIH, Long Term AF, PTB-XL, Chapman–Shaoxing (CSV 500 Hz), dan PhysioNet Challenge.'},
- {c:6,type:'look',target:'#url',cap:'Bagikan link ekg-aritmia.streamlit.app ke dosen atau kelompok. Untuk perangkat di Wi-Fi yang sama, pakai alamat Network URL dari jendela hitam.'}
+ {c:4,...nav('klasifikasi'),cap:'Buka Klasifikasi. Setiap detak hasil Pan-Tompkins diubah menjadi 38 fitur (RR, morfologi, wavelet db4, dan fitur relatif pasien), lalu digolongkan menjadi N, S, atau V.'},
+ {c:4,type:'click',target:'#mRf',act:s=>{s.model='rf'},cap:'Pilih pengklasifikasi di panel kiri: Random Forest, SVM, atau k-NN. Ketiganya dilatih pada 22 pasien DS1 MIT-BIH dan diuji pada 22 pasien DS2 yang berbeda.'},
+ {c:4,type:'look',target:'#clStats',cap:'Rekaman 100 dengan Random Forest: 2.273 detak, 2.236 digolongkan N, 36 S, dan 1 V.'},
+ {c:4,type:'look',target:'#clSig',cap:'Label kelas muncul di atas tiap detak dengan warna berbeda. Detak S datang lebih awal dari biasanya; detak V lebar dan tanpa gelombang P. Monitor berjalan juga menampilkan label ini.'},
+ {c:4,type:'look',target:'#clCm',cap:'Bila rekaman punya anotasi, hasilnya dibandingkan dengan dokter. Di rekaman 100 semua 33 detak S tertangkap, tetapi 3 detak N salah dikira S. Hasil per detak bisa diunduh sebagai CSV.'},
+ {c:5,type:'click',target:'#srcUp',act:s=>{s.src='up';s.uploaded=false;s.page='unggah'},cap:'Untuk rekaman sendiri, pilih Unggah berkas. Format yang didukung: WFDB, EDF/EDF+, HL7 aECG, MATLAB, dan CSV/TXT.'},
+ {c:5,type:'click',target:'#upl',act:s=>{s.uploaded=true},cap:'Untuk WFDB, pilih .hea, .dat, dan .atr sekaligus. Dengan .atr, sensitivitas dan presisi deteksi ikut dihitung. Berkas maksimal 50 MB.'},
+ {c:5,type:'look',target:'#leadSel',cap:'Bila rekaman punya beberapa sadapan, pilih di Sadapan. II atau MLII dipilih otomatis karena paling mirip MIT-BIH.'},
+ {c:5,type:'look',target:'#recCap',cap:'Keterangan menjelaskan hasil pembacaan: format, sadapan, frekuensi sampling, dan anotasi. Sinyal diubah ke mV, disampel ulang ke 360 Hz, dan dipotong ke 30 menit pertama bila lebih panjang.'},
+ {c:6,...nav('tentang'),act:s=>{s.page='tentang'},cap:'Buka Tentang untuk daftar format berkas, metode, dan rujukan.'},
+ {c:6,type:'look',target:'#dataTbl',cap:'Tabel data latihan berisi dataset aritmia gratis yang bisa langsung diunggah, misalnya MIT-BIH, Long Term AF, PTB-XL, Chapman–Shaoxing (CSV 500 Hz), dan PhysioNet Challenge.'},
+ {c:7,type:'look',target:'#url',cap:'Bagikan link ekg-aritmia.streamlit.app ke dosen atau kelompok. Untuk perangkat di Wi-Fi yang sama, pakai alamat Network URL dari jendela hitam.'}
 ];
 
 /* ---------- pemutar ---------- */

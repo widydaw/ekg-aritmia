@@ -177,6 +177,31 @@ def cached_detection(uid: str, _rec: Record) -> dict:
     return out
 
 
+@st.cache_resource(show_spinner="Memuat model…")
+def cached_model(name: str):
+    from .classifier import load_model
+    return load_model(name)
+
+
+@st.cache_data(show_spinner="Mengklasifikasi detak…", max_entries=8)
+def cached_classification(uid: str, _rec: Record, model_name: str) -> dict | None:
+    """Fitur dari puncak hasil Pan-Tompkins → kelas tiap detak (alur yang sama dengan evaluasi menyeluruh di train.py)."""
+    from .classifier import predict, predict_proba
+    from .features import extract_features
+
+    model, meta = cached_model(model_name)
+    if model is None:
+        return None
+    det = cached_detection(uid, _rec)
+    F = extract_features(det["clean"], det["peaks"], _rec.fs)
+    out = {"pred": predict(model, F), "proba": predict_proba(model, F), "classes": list(model.classes_), "meta": meta,
+           "truth": None}
+    if det["match"] is not None:
+        pairs = det["match"][0]
+        out["truth"] = [(i, _rec.labels[j]) for i, j in pairs]
+    return out
+
+
 # ---------- grafik ----------
 def ecg_figure(t0: float, t1: float, height: int = 300) -> go.Figure:
     """Grafik bergaya kertas EKG: garis besar 1 s / 0,5 mV, garis kecil 0,2 s / 0,1 mV."""

@@ -19,9 +19,15 @@ with c1:
     st.write("Band-pass Butterworth orde 4, 0,5–40 Hz dengan penyaringan dua arah (sosfiltfilt), pilihan notch 50/60 Hz "
              "dan filter median; deteksi puncak R dengan Pan-Tompkins (band-pass 5–15 Hz, turunan, kuadrat, integrasi "
              "150 ms, ambang adaptif, refrakter 200 ms, cek gelombang T, pencarian mundur); HR = 60 / RR, SDNN, dan RMSSD.")
+    st.write("Klasifikasi: 38 fitur per detak (6 fitur RR, 14 morfologi, 10 wavelet db4 level 4, 8 fitur relatif "
+             "terhadap detak median pasien). Model Random Forest, SVM RBF, dan k-NN dilatih pada DS1 dan diuji pada DS2 "
+             "(pembagian per pasien menurut de Chazal dkk., 2004), dengan bobot keputusan per kelas yang disetel "
+             "hanya pada DS1. Kelas mengikuti standar AAMI: N, S, V (F dan Q tidak diklasifikasi).")
     st.subheader("Keterbatasan")
     st.write("Rekaman yang sangat berderau atau berisi banyak artefak gerakan dapat menurunkan akurasi deteksi. "
-             "Rekaman lebih dari 30 menit hanya dianalisis 30 menit pertamanya. Contoh sintetis hanya untuk demo.")
+             "Rekaman lebih dari 30 menit hanya dianalisis 30 menit pertamanya. Contoh sintetis hanya untuk demo. "
+             "Model hanya dilatih pada sadapan MLII MIT-BIH; pada sadapan atau alat rekam lain hasil klasifikasi bisa "
+             "kurang tepat, dan detak S masih sering tertukar dengan N.")
 with c2:
     st.subheader("Format berkas yang bisa diunggah")
     st.markdown("\n".join(f"- **{k}** — {v}" for k, v in FORMATS.items()))
@@ -53,5 +59,7 @@ st.markdown("""
 6. Zheng, J. dkk. (2020). A 12-lead electrocardiogram database for arrhythmia research covering more than 10,000 patients. *Scientific Data*, 7, 48. [doi:10.1038/s41597-020-0386-x](https://doi.org/10.1038/s41597-020-0386-x)
 7. Clifford, G.D. dkk. (2017). AF Classification from a Short Single Lead ECG Recording: the PhysioNet/Computing in Cardiology Challenge 2017. *Computing in Cardiology*, 44.
 8. Perez Alday, E.A. dkk. (2020). Classification of 12-lead ECGs: the PhysioNet/Computing in Cardiology Challenge 2020. *Physiological Measurement*, 41(12), 124003. [doi:10.1088/1361-6579/abc960](https://doi.org/10.1088/1361-6579/abc960)
+9. de Chazal, P., O'Dwyer, M., dan Reilly, R.B. (2004). Automatic classification of heartbeats using ECG morphology and heartbeat interval features. *IEEE Trans. Biomed. Eng.*, 51(7), 1196–1206. [doi:10.1109/TBME.2004.827359](https://doi.org/10.1109/TBME.2004.827359)
+10. ANSI/AAMI EC57:2012. Testing and reporting performance results of cardiac rhythm and ST segment measurement algorithms.
 """)
 st.caption("Cek kembali rincian sitasi pada sumber aslinya sebelum dipakai di laporan.")
