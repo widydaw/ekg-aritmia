@@ -67,6 +67,7 @@ st.markdown(
     "atau **unggah berkas** EKG Anda sendiri.\n"
     "2. Buka **Analisis Sinyal** untuk membandingkan sinyal asli, sinyal bersih, dan spektrumnya.\n"
     "3. Buka **Deteksi R** untuk melihat puncak R, HR, monitor berjalan, dan tahapan Pan-Tompkins.\n"
-    "4. Buka **Klasifikasi** untuk melihat kelas N/S/V tiap detak dan bentuk rata-rata per kelas."
+    "4. Buka **Klasifikasi** untuk melihat **ringkasan irama** (ada tanda aritmia atau tidak), kelas N/S/V tiap "
+    "detak, dan bentuk rata-rata per kelas."
 )
 st.caption("Untuk pembelajaran, bukan alat diagnosis medis.")

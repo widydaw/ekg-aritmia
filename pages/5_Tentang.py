@@ -23,6 +23,10 @@ with c1:
              "terhadap detak median pasien). Model Random Forest, SVM RBF, dan k-NN dilatih pada DS1 dan diuji pada DS2 "
              "(pembagian per pasien menurut de Chazal dkk., 2004), dengan bobot keputusan per kelas yang disetel "
              "hanya pada DS1. Kelas mengikuti standar AAMI: N, S, V (F dan Q tidak diklasifikasi).")
+    st.write("Ringkasan irama (berbasis aturan): detak prematur sering bila S+V ≥ 1% detak; bradikardia bila HR < 60 bpm, "
+             "takikardia bila > 100 bpm; keteraturan dinilai per 30 interval RR (RR di sekitar detak V dibuang), "
+             "potongan tidak teratur bila median selisih RR berturutan > 8% median RR, dan curiga fibrilasi atrium bila "
+             "≥ 50% potongan tidak teratur.")
     st.subheader("Keterbatasan")
     st.write("Rekaman yang sangat berderau atau berisi banyak artefak gerakan dapat menurunkan akurasi deteksi. "
              "Rekaman lebih dari 30 menit hanya dianalisis 30 menit pertamanya. Contoh sintetis hanya untuk demo. "

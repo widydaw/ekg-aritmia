@@ -8,6 +8,7 @@ from src.classifier import MODEL_NAMES
 from src.data_loader import CLASS_NAMES, CLASSES
 from src.features import segments
 from src.monitor import CLASS_COLORS, ecg_monitor
+from src.rhythm import AF_FRAC, BRADY, IRREG_THR, PERIOD_FRAC, PREMATURE_PCT, TACHY, WINDOW, summarize
 
 ui.page_setup("Klasifikasi")
 rec = ui.sidebar_record()
@@ -37,6 +38,29 @@ peaks, clean, pred = det["peaks"], det["clean"], res["pred"]
 if len(peaks) < 3:
     st.warning("Terlalu sedikit detak terdeteksi untuk diklasifikasi.")
     st.stop()
+
+rs = summarize(peaks, pred, rec.fs)
+_box = {"warn": st.warning, "mild": st.info, "ok": st.success}[rs["verdict"][1]]
+_icon = {"warn": "⚠️", "mild": "ℹ️", "ok": "✅", "na": "–"}
+hr_txt = f"{rs['hr']:.0f} bpm, " if np.isfinite(rs["hr"]) else ""
+_box(
+    f"**Ringkasan irama: {rs['verdict'][0]}**\n\n"
+    f"- {_icon[rs['premature'][1]]} **Detak prematur:** {rs['premature'][0]}\n"
+    f"- {_icon[rs['rate'][1]]} **Kecepatan:** {hr_txt}{rs['rate'][0]}\n"
+    f"- {_icon[rs['regularity'][1]]} **Keteraturan RR:** {rs['regularity'][0]}"
+    + (f"\n\n{rs['note']}" if rs["note"] else "")
+)
+with st.expander("Aturan yang dipakai ringkasan ini"):
+    st.markdown(
+        f"- **Detak prematur** = jumlah detak S dan V hasil model. Disebut *sering* bila ≥ {PREMATURE_PCT:g}% dari "
+        "semua detak; di bawah itu *sesekali*.\n"
+        f"- **Kecepatan** = HR rata-rata (60 / rata-rata RR): < {BRADY} bpm bradikardia, > {TACHY} bpm takikardia.\n"
+        f"- **Keteraturan**: rekaman dipotong per {WINDOW} interval RR. RR di sekitar detak V dibuang agar "
+        "bigemini tidak terbaca sebagai fibrilasi. Satu potongan disebut tidak teratur bila median selisih RR "
+        f"berturutan > {IRREG_THR:.0%} dari median RR. ≥ {AF_FRAC:.0%} potongan tidak teratur → curiga fibrilasi "
+        f"atrium; {PERIOD_FRAC:.0%}–{AF_FRAC:.0%} → ada periode tidak teratur.\n\n"
+        "Aturan ini sederhana dan hanya untuk pembelajaran, bukan diagnosis medis."
+    )
 
 n_cls = {c: int(np.sum(pred == c)) for c in CLASSES}
 c = st.columns(4)

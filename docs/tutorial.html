@@ -210,6 +210,7 @@ table.mt td{padding:4px 6px;border-bottom:1px solid #f3eaec}
                 <span class="ey">RM 3 · Klasifikasi detak</span>
                 <h2>Klasifikasi detak N, S, dan V</h2>
                 <div class="panel" id="clModel"><div class="row"><span class="lab">Pengklasifikasi</span><span class="chipbtn" id="mRf">Random Forest</span><span class="chipbtn" id="mSvm">SVM (RBF)</span><span class="chipbtn" id="mKnn">k-NN</span></div></div>
+                <div class="panel" id="clSum" style="border-left:4px solid #a86400;background:#fff8ec"><div class="ph" style="color:#7a4a00">Ringkasan irama: ada tanda aritmia, detak prematur sering</div><p class="mini" style="margin:4px 0 0">⚠️ Detak prematur: sering, 36 detak S (1,6%), 1 detak V · ✅ Kecepatan: 76 bpm, normal · ✅ Keteraturan RR: teratur</p></div>
                 <div class="tiles" id="clStats"><div class="tile"><div class="k">Detak diklasifikasi</div><div class="v">2.273</div></div><div class="tile"><div class="k">N · Normal</div><div class="v" style="color:#2b7a76">2.236</div></div><div class="tile"><div class="k">S · Supraventrikular</div><div class="v" style="color:#c17a07">36</div></div><div class="tile"><div class="k">V · Ventrikular</div><div class="v" style="color:#8d2e86">1</div></div></div>
                 <div class="panel" id="clSig"><div class="ph">Sinyal bersih dan kelas tiap detak <span class="sval"><b style="color:#2b7a76">N</b> · <b style="color:#c17a07">S</b> · <b style="color:#8d2e86">V</b></span></div><canvas id="cvCls" height="110"></canvas></div>
               </div>
@@ -319,7 +320,7 @@ function render(){
 
 /* ---------- langkah ---------- */
 const CH=['Membuka aplikasi','Memilih rekaman','Analisis Sinyal','Deteksi R','Klasifikasi','Unggah berkas sendiri','Data latihan','Berbagi'];
-const SUB=['Link online atau laptop sendiri','Sumber, nomor rekaman, jendela waktu','Filter, notch 50/60 Hz, spektrum','Monitor berjalan, Se/PPV, tahapan','Model, kelas N/S/V, unduh CSV','WFDB, EDF, HL7 aECG, MAT, CSV','Format dan dataset di halaman Tentang','Link dan Wi-Fi'];
+const SUB=['Link online atau laptop sendiri','Sumber, nomor rekaman, jendela waktu','Filter, notch 50/60 Hz, spektrum','Monitor berjalan, Se/PPV, tahapan','Ringkasan irama, kelas N/S/V, unduh CSV','WFDB, EDF, HL7 aECG, MAT, CSV','Format dan dataset di halaman Tentang','Link dan Wi-Fi'];
 const nav=p=>({type:'click',target:'#nv-'+p,act:s=>{s.page=p}});
 const STEPS=[
  {c:0,type:'type',target:'#url',text:'ekg-aritmia.streamlit.app',act:s=>{s.typed='ekg-aritmia.streamlit.app'},cap:'Buka browser di HP atau laptop, lalu ketik ekg-aritmia.streamlit.app. Tidak perlu login. Di laptop sendiri, klik dua kali Jalankan Aplikasi.bat; alamatnya localhost:8501.'},
@@ -341,6 +342,7 @@ const STEPS=[
  {c:3,type:'click',target:'#stMwi',act:s=>{s.stage='mwi'},cap:'Pilih tahap Pan-Tompkins. Tahap integrasi 150 ms menampilkan ambang adaptif sebagai garis putus-putus.'},
  {c:4,...nav('klasifikasi'),cap:'Buka Klasifikasi. Setiap detak hasil Pan-Tompkins diubah menjadi 38 fitur (RR, morfologi, wavelet db4, dan fitur relatif pasien), lalu digolongkan menjadi N, S, atau V.'},
  {c:4,type:'click',target:'#mRf',act:s=>{s.model='rf'},cap:'Pilih pengklasifikasi di panel kiri: Random Forest, SVM, atau k-NN. Ketiganya dilatih pada 22 pasien DS1 MIT-BIH dan diuji pada 22 pasien DS2 yang berbeda.'},
+ {c:4,type:'look',target:'#clSum',cap:'Kotak Ringkasan irama di atas menjawab ada tanda aritmia atau tidak. Isinya tiga hal: detak prematur (jumlah S dan V), kecepatan (HR, bradikardia di bawah 60 atau takikardia di atas 100 bpm), dan keteraturan interval RR. Bila sebagian besar rekaman sangat tidak teratur, muncul tulisan curiga fibrilasi atrium.'},
  {c:4,type:'look',target:'#clStats',cap:'Rekaman 100 dengan Random Forest: 2.273 detak, 2.236 digolongkan N, 36 S, dan 1 V.'},
  {c:4,type:'look',target:'#clSig',cap:'Label kelas muncul di atas tiap detak dengan warna berbeda. Detak S datang lebih awal dari biasanya; detak V lebar dan tanpa gelombang P. Monitor berjalan juga menampilkan label ini. Hasil per detak bisa diunduh sebagai CSV.'},
  {c:5,type:'click',target:'#srcUp',act:s=>{s.src='up';s.uploaded=false;s.page='unggah'},cap:'Untuk rekaman sendiri, pilih Unggah berkas. Format yang didukung: WFDB, EDF/EDF+, HL7 aECG, MATLAB, dan CSV/TXT.'},
